@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from .models import User, ForumCategory
 from rest_framework import viewsets
+from django.contrib.staticfiles import finders
+from django.templatetags.static import static
 
 from . import serializers
 
@@ -10,6 +12,7 @@ from rest_framework import permissions
 class UserViewSet(viewsets.ModelViewSet):
   queryset = User.objects.all()
   lookup_field = 'username'
+
   permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   def get_serializer_class(self):
     if self.request.user.is_staff or self.kwargs.get('pk') == 'current':

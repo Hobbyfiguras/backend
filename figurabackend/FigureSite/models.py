@@ -1,12 +1,13 @@
 import os
+import random
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django_resized import ResizedImageField
 from django.db import models
 from django.utils.deconstruct import deconstructible
 from ordered_model.models import OrderedModel
-@deconstructible
 
+@deconstructible
 class AvatarRename(object):
     def __call__(self, instance, filename):
         # Remove the extension from the filename
