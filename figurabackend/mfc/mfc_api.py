@@ -17,7 +17,6 @@ def make_mfc_request(payload, access='read', objects='items', request='search'):
     'request': request,
     **payload
   }
-  print(parameters)
   request = r.get('https://myfigurecollection.net/api_v2.php', params=parameters)
   return request
 

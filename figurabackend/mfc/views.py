@@ -1,23 +1,34 @@
 from django.shortcuts import render
 import requests
-from rest_framework import viewsets
+import json
+
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from . import mfc_api
-
+from . import mfc_api, mfc_parser
 class FiguresViewSet(viewsets.ViewSet):
   """
   A simple ViewSet for listing or retrieving users.
   """
+
+  permission_classes = [permissions.AllowAny]
+
   @action(methods=['get'], detail=False)
   def search(self, request):
     keywords = request.query_params.get('keywords', '')
     page = request.query_params.get('page', 1)
-    print(keywords)
+    print(request)
     response = mfc_api.figure_search(keywords, page)
     return Response(response.json())
 
+  def retrieve(self, request, pk=None):
+    page = request.query_params.get('page', 1)
+    items_per_page = 22
+    return Response(mfc_parser.getUserFigures(pk, int(page), items_per_page))
+
 class PicturesViewset(viewsets.ViewSet):
+  permission_classes = [permissions.AllowAny]
+
   @action(methods=['get'], detail=False)
   def search(self, request):
     username = request.query_params.get('username', '')

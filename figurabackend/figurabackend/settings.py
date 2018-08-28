@@ -25,7 +25,7 @@ SECRET_KEY = 'cr+2488qp=f^jb8r13j@wwsq2mxyqmh#zi_y603=-)zjahxvd2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.33', '127.0.0.1']
 
 
 # Application definition
@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'FigureSite',
     'rest_auth',
-    'django_resized'
+    'django_resized',
+    'ordered_model'
 ]
 
 REST_USE_JWT = True
@@ -51,7 +52,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
       'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
       'rest_framework.authentication.SessionAuthentication',
-      'rest_framework.authentication.BasicAuthentication'
+      'rest_framework.authentication.BasicAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+      'rest_framework.permissions.IsAdminUser',
     )
 }
 
@@ -90,7 +94,7 @@ TEMPLATES = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
-
+CORS_ALLOW_CREDENTIALS = False
 WSGI_APPLICATION = 'figurabackend.wsgi.application'
 
 # Database
