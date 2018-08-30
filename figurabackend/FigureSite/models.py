@@ -6,6 +6,7 @@ from django_resized import ResizedImageField
 from django.db import models
 from django.utils.deconstruct import deconstructible
 from ordered_model.models import OrderedModel
+from django.utils.text import slugify
 
 @deconstructible
 class AvatarRename(object):
@@ -26,11 +27,16 @@ class ForumCategory(OrderedModel):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=200, null=True, blank=True)
     slug = models.SlugField(max_length=100)
-    
+
     def __str__(self):
         return self.name
     class Meta:
         verbose_name_plural = "forum categories"
+    def save(self, *args, **kwargs):
+        # Only save slugs on first save
+        if not self.id:
+            self.slug = slugify(self.title)
+        super(Article, self).save(*args,**kwargs)
 
 class Forum(OrderedModel):
     name = models.CharField(max_length=100)
