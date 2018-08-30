@@ -11,10 +11,9 @@ DEFAULT_AVATARS = [
         '/avatars/avatar_5.png'
     ]
 
-class AvatarField(serializers.FileField):
+class AvatarField(serializers.ImageField):
+
     def get_attribute(self, obj):
-        # We pass the object instance onto `to_representation`,
-        # not just the field attribute.
         return obj
 
     def to_representation(self, obj):
@@ -22,13 +21,17 @@ class AvatarField(serializers.FileField):
         Serialize the object's class name.
         """
         if obj.avatar:
-            return obj.avatar
+            return super(AvatarField, self).to_representation(obj.avatar)
         else:
             random.seed(obj.id)
             return self.context['request'].build_absolute_uri(static(random.choice(DEFAULT_AVATARS)))
 
+    def to_internal_value(self, obj):
+        return super(serializers.ImageField, self).to_internal_value(obj)
+
 class PublicUserSerializer(serializers.ModelSerializer):
-    avatar = AvatarField
+    avatar = AvatarField()
+    #avatar = serializers.ImageField()
     def get_avatar(self, obj):
         print("get avatar")
 
