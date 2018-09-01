@@ -8,6 +8,9 @@ from . import views
 router = DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'forum/categories', views.ForumCategoryViewSet)
+router.register(r'forum', views.ForumViewSet)
+router.register(r'thread', views.ThreadViewSet)
+router.register(r'posts', views.PostViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

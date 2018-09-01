@@ -1,8 +1,8 @@
 import random
-from .models import User, ForumCategory, Forum
+from .models import User, ForumCategory, Forum, Post, Thread
 from rest_framework import serializers
 from django.templatetags.static import static
-
+from django.core.paginator import Paginator
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
@@ -47,15 +47,76 @@ class FullUserSerializer(PublicUserSerializer):
         model = User
         exclude = ('password',)
 
-class ForumSerializer(serializers.ModelSerializer):
+class MinimalUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username',)
+
+class CreatePostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ('creator', 'content', 'thread',)
+
+class BasicForumSerializer(serializers.ModelSerializer):
+    thread_count = serializers.SerializerMethodField()
+
+    def get_thread_count(self, obj):
+        return obj.threads.count()
+
     class Meta:
         model = Forum
+        lookup_field = 'slug'
+        fields = '__all__'
+
+class ThreadSerializer(serializers.ModelSerializer):
+    creator = MinimalUserSerializer()
+    forum = BasicForumSerializer()
+    post_count = serializers.SerializerMethodField()
+
+    def get_post_count(self, obj):
+        return obj.posts.count()
+
+    class Meta:
+        model = Thread
+        fields = '__all__'
+
+class MinimalThreadSerializer(serializers.ModelSerializer):
+    forum = BasicForumSerializer()
+    class Meta:
+        model = Thread
+        fields = '__all__'
+
+class PostSerializer(serializers.ModelSerializer):
+    creator = PublicUserSerializer()
+    thread = MinimalThreadSerializer()
+
+    class Meta:
+        model = Post
+        fields = '__all__'
+
+class MinimalPostSerializer(serializers.ModelSerializer):
+    creator = MinimalUserSerializer()
+    thread = ThreadSerializer()
+
+    class Meta:
+        model = Post
+        exclude = ('content',)
+
+class FullForumSerializer(serializers.ModelSerializer):
+
+    threads = ThreadSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Forum
+        lookup_field = 'slug'
         fields = '__all__'
 
 
+
 class ForumCategorySerializer(serializers.ModelSerializer):
-    forums = ForumSerializer(many=True, read_only=True)
+    forums = BasicForumSerializer(many=True, read_only=True)
 
     class Meta:
         model = ForumCategory
-        fields = ('id', 'name', 'description', 'forums',)
+        lookup_field = 'slug'
+        fields = ('id', 'name', 'description', 'forums', 'slug',)

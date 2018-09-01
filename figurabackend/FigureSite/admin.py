@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Forum, ForumCategory
+from .models import User, Forum, ForumCategory, Thread, Post
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from ordered_model.admin import OrderedModelAdmin
 
@@ -25,3 +25,5 @@ class ForumCategoryModelAdmin(OrderedModelAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Forum, ForumModelAdmin)
 admin.site.register(ForumCategory, ForumCategoryModelAdmin)
+admin.site.register(Thread, admin.ModelAdmin)
+admin.site.register(Post, admin.ModelAdmin)
