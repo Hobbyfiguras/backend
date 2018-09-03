@@ -57,6 +57,11 @@ class CreatePostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('creator', 'content', 'thread',)
 
+class CreateThreadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Thread
+        fields = ('creator', 'title', 'forum',)
+
 class BasicForumSerializer(serializers.ModelSerializer):
     thread_count = serializers.SerializerMethodField()
 
@@ -68,18 +73,6 @@ class BasicForumSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
         fields = '__all__'
 
-class ThreadSerializer(serializers.ModelSerializer):
-    creator = MinimalUserSerializer()
-    forum = BasicForumSerializer()
-    post_count = serializers.SerializerMethodField()
-
-    def get_post_count(self, obj):
-        return obj.posts.count()
-
-    class Meta:
-        model = Thread
-        fields = '__all__'
-
 class MinimalThreadSerializer(serializers.ModelSerializer):
     forum = BasicForumSerializer()
     class Meta:
@@ -89,18 +82,30 @@ class MinimalThreadSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     creator = PublicUserSerializer()
     thread = MinimalThreadSerializer()
-
     class Meta:
         model = Post
         fields = '__all__'
 
+
+
 class MinimalPostSerializer(serializers.ModelSerializer):
     creator = MinimalUserSerializer()
-    thread = ThreadSerializer()
 
     class Meta:
         model = Post
         exclude = ('content',)
+
+class ThreadSerializer(serializers.ModelSerializer):
+    creator = MinimalUserSerializer()
+    forum = BasicForumSerializer()
+    post_count = serializers.SerializerMethodField()
+    last_post = MinimalPostSerializer()
+    def get_post_count(self, obj):
+        return obj.posts.count()
+
+    class Meta:
+        model = Thread
+        fields = '__all__'
 
 class FullForumSerializer(serializers.ModelSerializer):
 
@@ -115,7 +120,7 @@ class FullForumSerializer(serializers.ModelSerializer):
 
 class ForumCategorySerializer(serializers.ModelSerializer):
     forums = BasicForumSerializer(many=True, read_only=True)
-
+    
     class Meta:
         model = ForumCategory
         lookup_field = 'slug'

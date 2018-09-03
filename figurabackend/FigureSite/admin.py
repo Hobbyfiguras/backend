@@ -7,12 +7,12 @@ from ordered_model.admin import OrderedModelAdmin
 class CustomUserAdmin(UserAdmin):
     add_fieldsets = UserAdmin.add_fieldsets + (
         (None, {
-            'fields': ('avatar',),
+            'fields': ('avatar', 'mal_username', 'anilist_username', 'mfc_username', 'twitter_username',),
         }),
     )
     fieldsets = UserAdmin.fieldsets + (
         (None, {
-            'fields': ('avatar',),
+            'fields': ('avatar', 'mal_username', 'anilist_username', 'mfc_username', 'twitter_username',),
         }),
     )
 

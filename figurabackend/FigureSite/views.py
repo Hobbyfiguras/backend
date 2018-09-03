@@ -9,12 +9,14 @@ from django.templatetags.static import static
 from django.core.paginator import Paginator
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
+from rest_framework import mixins
 from . import serializers
-
+import datetime
 from rest_framework import permissions
+from django.utils import timezone
 
 class UserPostPagination(PageNumberPagination):
-    page_size = 30
+    page_size = 10
 class UserViewSet(viewsets.ModelViewSet):
   queryset = User.objects.all()
   lookup_field = 'username'
@@ -42,16 +44,27 @@ class UserViewSet(viewsets.ModelViewSet):
     else:
       posts = serializers.PostSerializer(user.posts, many=True, context={'request': request})
     return Response(posts.data)
-class ForumCategoryViewSet(viewsets.ModelViewSet):
+
+  @action(methods=['get'], pagination_class=UserPostPagination, detail=True)
+  def threads(self, request, username=None):
+    user = self.get_object()
+    page = self.paginate_queryset(user.threads.all().order_by('-created'))
+    if page is not None:
+      serializer = serializers.ThreadSerializer(page, many=True, context={'request': request})
+      return self.get_paginated_response(serializer.data)
+    else:
+      threads = serializers.ThreadSerializer(user.threads.all().order_by('-created'), many=True, context={'request': request})
+    return Response(threads.data)
+class ForumCategoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = ForumCategory.objects.all()
   permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   serializer_class = serializers.ForumCategorySerializer
   lookup_field = 'slug'
 
 class ForumPagination(PageNumberPagination):
-    page_size = 30
+    page_size = 15
 
-class ForumViewSet(viewsets.ModelViewSet):
+class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Forum.objects.all()
   permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   serializer_class = serializers.FullForumSerializer
@@ -60,20 +73,46 @@ class ForumViewSet(viewsets.ModelViewSet):
   @action(detail=True, pagination_class=ForumPagination)
   def threads(self, request, slug=None):
     forum = self.get_object()
-    page = self.paginate_queryset(forum.threads.all().order_by('modified'))
+    page = self.paginate_queryset(forum.threads.all().order_by('-modified'))
     threads = {}
     if page is not None:
       serializer = serializers.ThreadSerializer(page, many=True, context={'request': request})
       threads = self.get_paginated_response(serializer.data).data
     else:
-      threads = serializers.ThreadSerializer(forum.threads, many=True, context={'request': request}).data
+      threads = serializers.ThreadSerializer(forum.threads.all().order_by('-modified'), many=True, context={'request': request}).data
 
     return Response({**{'threads': threads}, **serializers.BasicForumSerializer(forum).data})
+
+  @action(detail=True, methods=['post'])
+  def create_thread(self, request, slug=None):
+    forum = self.get_object()
+    request.data['creator'] = request.user.id
+    request.data['forum'] = forum.id
+
+    thread_serializer = serializers.CreateThreadSerializer(data=request.data)
+    if thread_serializer.is_valid() and request.data['content']:
+      thread = thread_serializer.save()
+      post_data = {
+        'thread': thread.id,
+        'creator': request.user.id,
+        'content': request.data['content'] 
+      }
+      post_serializer = serializers.CreatePostSerializer(data=post_data)
+      if post_serializer.is_valid():
+        post_serializer.save()
+        data = thread_serializer.data
+        data['slug'] = thread.slug
+        data['id'] = thread.id
+        return Response(data, status=status.HTTP_201_CREATED)
+      else:
+        return Response(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+    else:
+      return Response(thread_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ThreadPagination(PageNumberPagination):
     page_size = 30
 
-class ThreadViewSet(viewsets.ModelViewSet):
+class ThreadViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
   permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   serializer_class = serializers.ThreadSerializer
@@ -81,7 +120,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
 
   def retrieve(self, request, pk=None):
     thread = self.get_object()
-    page = self.paginate_queryset(thread.posts.all().order_by('modified'))
+    page = self.paginate_queryset(thread.posts.all().order_by('created'))
     posts = {}
     if page is not None:
       serializer = serializers.PostSerializer(page, many=True, context={'request': request})
@@ -98,6 +137,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
     serializer = serializers.CreatePostSerializer(data=request.data)
     if serializer.is_valid():
       serializer.save()
+      thread.save(modified=timezone.now())
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -105,10 +145,25 @@ class ThreadViewSet(viewsets.ModelViewSet):
 class PostsPagination(PageNumberPagination):
     page_size = 10
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Post.objects.all()
   pagination_class = PostsPagination
   permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   serializer_class = serializers.PostSerializer
 
-  
+  def get_serializer_class(self):
+    if self.action == 'patial_update':
+      return serializers.MinimalPostSerializer
+    else:
+      return serializers.PostSerializer
+
+  def partial_update(self, request, *args, **kwargs):
+    post = self.get_object()
+    serializer = self.get_serializer(post, data=request.data, partial=True)
+    if serializer.is_valid():
+      serializer.save(modified=timezone.now())
+      if getattr(post, '_prefetched_objects_cache', None):
+        # If 'prefetch_related' has been applied to a queryset, we need to
+        # forcibly invalidate the prefetch cache on the instance.
+        post._prefetched_objects_cache = {}
+      return Response(serializer.data)

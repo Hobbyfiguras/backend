@@ -6,7 +6,8 @@ from django_resized import ResizedImageField
 from django.db import models
 from django.utils.deconstruct import deconstructible
 from ordered_model.models import OrderedModel
-from django.utils.text import slugify
+from .utils import unique_slugify
+
 import datetime
 
 class MyUserManager(UserManager):
@@ -46,7 +47,7 @@ class ForumCategory(OrderedModel):
     def save(self, *args, **kwargs):
         # Only save slugs on first save
         if not self.id:
-            self.slug = slugify(self.name)
+            unique_slugify(self, self.name)
         super(ForumCategory, self).save(*args,**kwargs)
 
 class Forum(OrderedModel):
@@ -59,7 +60,7 @@ class Forum(OrderedModel):
     def save(self, *args, **kwargs):
         # Only save slugs on first save
         if not self.id:
-            self.slug = slugify(self.name)
+            unique_slugify(self, self.name)
         super(Forum, self).save(*args,**kwargs)
 
 class Thread(models.Model):
@@ -73,16 +74,23 @@ class Thread(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.created = datetime.datetime.now()
-        if not self.id:
-            self.slug = slugify(self.title)
+            self.modified = datetime.datetime.now()
+            unique_slugify(self, self.title)
         return super(Thread, self).save(*args, **kwargs)
+    @property
+    def last_post(self):
+        ordered_posts = self.posts.all().order_by('modified')
+        if len(ordered_posts) > 0:
+            return self.posts.all().order_by('modified')[0]
+        else:
+            return None
     def __str__(self):
         return self.title
     
 class Post(models.Model):
     creator = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
     thread = models.ForeignKey(Thread, related_name="posts", on_delete=models.CASCADE)
-    content = models.TextField(max_length=2000)
+    content = models.TextField(max_length=20000)
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField(editable=False)
 
@@ -90,5 +98,5 @@ class Post(models.Model):
         ''' On save, update timestamps '''
         if not self.id:
             self.created = datetime.datetime.now()
-        self.modified = datetime.datetime.now()
+            self.modified = datetime.datetime.now()
         return super(Post, self).save(*args, **kwargs)
