@@ -14,10 +14,11 @@ from . import serializers
 import datetime
 from rest_framework import permissions
 from django.utils import timezone
+from .mixins import EagerLoadingMixin
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   queryset = User.objects.all()
   lookup_field = 'username'
 
@@ -88,14 +89,15 @@ class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
     forum = self.get_object()
     request.data['creator'] = request.user.id
     request.data['forum'] = forum.id
-
+    
     thread_serializer = serializers.CreateThreadSerializer(data=request.data)
     if thread_serializer.is_valid() and request.data['content']:
       thread = thread_serializer.save()
       post_data = {
         'thread': thread.id,
         'creator': request.user.id,
-        'content': request.data['content'] 
+        'content': request.data['content'],
+        'nsfw': request.data['nsfw']
       }
       post_serializer = serializers.CreatePostSerializer(data=post_data)
       if post_serializer.is_valid():

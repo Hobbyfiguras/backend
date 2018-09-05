@@ -3,6 +3,7 @@ from .models import User, ForumCategory, Forum, Post, Thread
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
+from .mixins import EagerLoadingMixin
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
@@ -52,15 +53,17 @@ class MinimalUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username',)
 
-class CreatePostSerializer(serializers.ModelSerializer):
+class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
+    _SELECT_RELATED_FIELDS = ['creator', 'thread']
+
     class Meta:
         model = Post
         fields = ('creator', 'content', 'thread',)
 
-class CreateThreadSerializer(serializers.ModelSerializer):
+class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
     class Meta:
         model = Thread
-        fields = ('creator', 'title', 'forum',)
+        fields = ('creator', 'title', 'forum', 'nsfw',)
 
 class BasicForumSerializer(serializers.ModelSerializer):
     thread_count = serializers.SerializerMethodField()
@@ -103,12 +106,17 @@ class ThreadSerializer(serializers.ModelSerializer):
     def get_post_count(self, obj):
         return obj.posts.count()
 
+    @staticmethod
+    def setup_eager_loading(queryset):
+        queryset = queryset.select_related('creator')
+        return queryset
+
     class Meta:
         model = Thread
         fields = '__all__'
 
-class FullForumSerializer(serializers.ModelSerializer):
-
+class FullForumSerializer(serializers.ModelSerializer, EagerLoadingMixin):
+    _PREFETCH_RELATED_FIELDS = ['threads']
     threads = ThreadSerializer(many=True, read_only=True)
 
     class Meta:

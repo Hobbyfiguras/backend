@@ -33,6 +33,7 @@ class User(AbstractUser):
     anilist_username = models.CharField(max_length=80, null=True, blank=True)
     mfc_username = models.CharField(max_length=80, null=True, blank=True)
     twitter_username = models.CharField(max_length=80, null=True, blank=True)
+    nsfw_enabled = models.BooleanField(default=False)
     def get_by_natural_key(self, username):
         return self.get(**{self.model.USERNAME_FIELD + '__iexact': username})
 class ForumCategory(OrderedModel):
@@ -70,6 +71,7 @@ class Thread(models.Model):
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField(editable=False)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
+    nsfw = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -80,7 +82,7 @@ class Thread(models.Model):
     @property
     def last_post(self):
         ordered_posts = self.posts.all().order_by('modified')
-        if len(ordered_posts) > 0:
+        if ordered_posts.count() > 0:
             return self.posts.all().order_by('modified')[0]
         else:
             return None
