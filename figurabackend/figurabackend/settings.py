@@ -56,10 +56,22 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
       'rest_framework.permissions.IsAdminUser',
-    )
+    ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'threads': '5/h',
+        'posts': '10/min',
+    },
+    'SERIALIZER_EXTENSIONS': {
+        'AUTO_OPTIMIZE': True,
+        'HASH_IDS_SOURCE': 'FigureSite.HASH_IDS',
+        'USE_HASH_IDS': True
+    }
 }
 
-
+HASHID_FIELD_SALT = "#jnz3ol^8a@bfb)05*&zspnc-+$+_qqi^03+sjz1s7ql8z*lm^"
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=15),

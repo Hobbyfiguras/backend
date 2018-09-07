@@ -7,7 +7,6 @@ from django.db import models
 from django.utils.deconstruct import deconstructible
 from ordered_model.models import OrderedModel
 from .utils import unique_slugify
-
 import datetime
 
 class MyUserManager(UserManager):
@@ -95,6 +94,9 @@ class Post(models.Model):
     content = models.TextField(max_length=20000)
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField(editable=False)
+    deleted = models.BooleanField(default=False)
+    delete_reason = models.TextField(default='')
+    modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''

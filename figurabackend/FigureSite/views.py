@@ -15,6 +15,8 @@ import datetime
 from rest_framework import permissions
 from django.utils import timezone
 from .mixins import EagerLoadingMixin
+from django.http import Http404
+from rest_framework_serializer_extensions.views import ExternalIdViewMixin
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10
@@ -112,9 +114,9 @@ class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
       return Response(thread_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ThreadPagination(PageNumberPagination):
-    page_size = 30
+    page_size = 20
 
-class ThreadViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
   permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   serializer_class = serializers.ThreadSerializer
@@ -122,6 +124,7 @@ class ThreadViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
 
   def retrieve(self, request, pk=None):
     thread = self.get_object()
+    print(pk)
     page = self.paginate_queryset(thread.posts.all().order_by('created'))
     posts = {}
     if page is not None:
@@ -139,10 +142,18 @@ class ThreadViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
     serializer = serializers.CreatePostSerializer(data=request.data)
     if serializer.is_valid():
       serializer.save()
-      thread.save(modified=timezone.now())
+      thread.modified = timezone.now()
+      thread.save()
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+  def get_throttles(self):
+      if self.action == 'create_post':
+          self.throttle_scope = 'posts'
+      else:
+          self.throttle_scope = None
+      return super().get_throttles()
 
 class PostsPagination(PageNumberPagination):
     page_size = 10
@@ -169,3 +180,22 @@ class PostViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         # forcibly invalidate the prefetch cache on the instance.
         post._prefetched_objects_cache = {}
       return Response(serializer.data)
+  @action(detail=True, methods=['post'])
+  def delete(self, request, pk=None):
+    post = self.get_object()
+    try:
+      post.deleted = True
+      if request.data['delete_reason']:
+        post.delete_reason = request.data['delete_reason']
+        post.modified_by = request.user
+      post.save()
+    except Http404:
+      pass
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+  def get_throttles(self):
+    if self.action in ['delete', 'partial_update']:
+        self.throttle_scope = 'posts'
+    else:
+        self.throttle_scope = None
+    return super().get_throttles()

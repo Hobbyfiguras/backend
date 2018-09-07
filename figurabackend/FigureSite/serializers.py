@@ -4,6 +4,8 @@ from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
 from .mixins import EagerLoadingMixin
+from rest_framework_serializer_extensions.fields import HashIdField
+
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
@@ -58,7 +60,7 @@ class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
 
     class Meta:
         model = Post
-        fields = ('creator', 'content', 'thread',)
+        fields = ('id', 'creator', 'content', 'thread',)
 
 class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
     class Meta:
@@ -82,8 +84,17 @@ class MinimalThreadSerializer(serializers.ModelSerializer):
         model = Thread
         fields = '__all__'
 
-class PostSerializer(serializers.ModelSerializer):
+class BasePostSerializer(serializers.ModelSerializer):
+    content = serializers.SerializerMethodField()
+    def get_content(self, obj):
+        if not obj.deleted:
+            return obj.content
+        else:
+            return '< Post eliminado >'
+
+class PostSerializer(BasePostSerializer):
     creator = PublicUserSerializer()
+    modified_by = PublicUserSerializer()
     thread = MinimalThreadSerializer()
     class Meta:
         model = Post
@@ -91,25 +102,21 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 
-class MinimalPostSerializer(serializers.ModelSerializer):
+class MinimalPostSerializer(BasePostSerializer):
     creator = MinimalUserSerializer()
-
+    content = None
     class Meta:
         model = Post
         exclude = ('content',)
 
 class ThreadSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=Thread)
     creator = MinimalUserSerializer()
     forum = BasicForumSerializer()
     post_count = serializers.SerializerMethodField()
     last_post = MinimalPostSerializer()
     def get_post_count(self, obj):
         return obj.posts.count()
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        queryset = queryset.select_related('creator')
-        return queryset
 
     class Meta:
         model = Thread
