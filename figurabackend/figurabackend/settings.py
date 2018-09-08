@@ -25,7 +25,7 @@ SECRET_KEY = 'cr+2488qp=f^jb8r13j@wwsq2mxyqmh#zi_y603=-)zjahxvd2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.33', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.1.38', '127.0.0.1']
 
 
 # Application definition
@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'FigureSite',
     'rest_auth',
     'django_resized',
-    'ordered_model'
+    'ordered_model',
+    'dry_rest_permissions'
 ]
 
 REST_USE_JWT = True

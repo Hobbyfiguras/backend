@@ -17,6 +17,8 @@ from django.utils import timezone
 from .mixins import EagerLoadingMixin
 from django.http import Http404
 from rest_framework_serializer_extensions.views import ExternalIdViewMixin
+from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
+from dry_rest_permissions.generics import DRYPermissions
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10
@@ -69,7 +71,7 @@ class ForumPagination(PageNumberPagination):
 
 class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Forum.objects.all()
-  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
+  permission_classes = (DRYPermissions,)
   serializer_class = serializers.FullForumSerializer
   lookup_field = 'slug'
 
@@ -106,7 +108,7 @@ class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
         post_serializer.save()
         data = thread_serializer.data
         data['slug'] = thread.slug
-        data['id'] = thread.id
+        data['id'] = external_id_from_model_and_internal_id(Thread, thread.id)
         return Response(data, status=status.HTTP_201_CREATED)
       else:
         return Response(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
@@ -118,7 +120,7 @@ class ThreadPagination(PageNumberPagination):
 
 class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
-  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
+  permission_classes = (DRYPermissions,)
   serializer_class = serializers.ThreadSerializer
   pagination_class = ThreadPagination
 

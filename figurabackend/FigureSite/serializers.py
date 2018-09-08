@@ -56,7 +56,6 @@ class MinimalUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username',)
 
 class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
-    _SELECT_RELATED_FIELDS = ['creator', 'thread']
 
     class Meta:
         model = Post

@@ -12,7 +12,7 @@ class CustomUserAdmin(UserAdmin):
     )
     fieldsets = UserAdmin.fieldsets + (
         (None, {
-            'fields': ('avatar', 'mal_username', 'anilist_username', 'mfc_username', 'twitter_username',),
+            'fields': ('avatar', 'mal_username', 'anilist_username', 'mfc_username', 'twitter_username', 'nsfw_enabled',),
         }),
     )
 

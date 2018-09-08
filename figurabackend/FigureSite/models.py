@@ -55,6 +55,24 @@ class Forum(OrderedModel):
     description = models.CharField(max_length=200)
     category = models.ForeignKey(ForumCategory, related_name="forums", on_delete=models.CASCADE)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
+    only_staff_can_post = models.BooleanField(default=False)
+
+    @staticmethod
+    def has_read_permission(request):
+        return True
+
+    def has_object_read_permission(self, request):
+        return True
+
+    @staticmethod
+    def has_create_thread_permission(self):
+        return True
+
+    def has_object_create_thread_permission(self, request):
+        if self.only_staff_can_post:
+            return request.user.is_staff
+        return True
+
     def __str__(self):
         return self.name
     def save(self, *args, **kwargs):
@@ -85,6 +103,14 @@ class Thread(models.Model):
             return self.posts.all().order_by('modified')[0]
         else:
             return None
+
+    @staticmethod
+    def has_read_permission(request):
+        return True
+    
+    def has_object_read_permission(self, request):
+        return True
+    
     def __str__(self):
         return self.title
     
