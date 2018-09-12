@@ -6,3 +6,4 @@ dry_rest_permissions==0.1.10
 hashids==1.2.0
 lxml==4.2.5
 djangorestframework==3.8.2
+django-cors-headers==2.4.0
