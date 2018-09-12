@@ -93,20 +93,29 @@ class BasePostSerializer(serializers.ModelSerializer):
 
 class PostSerializer(BasePostSerializer):
     creator = PublicUserSerializer()
-    modified_by = PublicUserSerializer()
     thread = MinimalThreadSerializer()
+
     class Meta:
         model = Post
         fields = '__all__'
 
-
-
-class MinimalPostSerializer(BasePostSerializer):
+class MinimalPostSerializer(serializers.ModelSerializer):
     creator = MinimalUserSerializer()
     content = None
     class Meta:
         model = Post
         exclude = ('content',)
+
+class UpdatePostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ('content',)
+class MinimalPostSerializerContent(BasePostSerializer):
+    creator = MinimalUserSerializer()
+    thread = MinimalThreadSerializer()
+    class Meta:
+        model = Post
+        fields = '__all__'
 
 class ThreadSerializer(serializers.ModelSerializer):
     id = HashIdField(model=Thread)
@@ -114,6 +123,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     forum = BasicForumSerializer()
     post_count = serializers.SerializerMethodField()
     last_post = MinimalPostSerializer()
+    first_post = MinimalPostSerializerContent()
     def get_post_count(self, obj):
         return obj.posts.count()
 

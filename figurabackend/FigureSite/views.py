@@ -68,6 +68,8 @@ class ForumCategoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, vie
 
 class ForumPagination(PageNumberPagination):
     page_size = 15
+    max_page_size = 20
+    page_size_query_param = 'page_size'
 
 class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Forum.objects.all()
@@ -117,12 +119,18 @@ class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
 
 class ThreadPagination(PageNumberPagination):
     page_size = 20
+    max_page_size = 20
+    page_size_query_param = 'page_size'
 
 class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
   permission_classes = (DRYPermissions,)
   serializer_class = serializers.ThreadSerializer
   pagination_class = ThreadPagination
+
+  def filter_queryset(self, queryset):
+    queryset = super(ThreadViewSet, self).filter_queryset(queryset)
+    return queryset.order_by('-created')
 
   def retrieve(self, request, pk=None):
     thread = self.get_object()
@@ -159,29 +167,33 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
 
 class PostsPagination(PageNumberPagination):
     page_size = 10
+    max_page_size = 10
+    page_size_query_param = 'page_size'
 
-class PostViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class PostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Post.objects.all()
   pagination_class = PostsPagination
-  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   serializer_class = serializers.PostSerializer
+  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
 
   def get_serializer_class(self):
-    if self.action == 'patial_update':
-      return serializers.MinimalPostSerializer
+    if self.action == 'partial_update':
+      return serializers.UpdatePostSerializer
     else:
       return serializers.PostSerializer
 
   def partial_update(self, request, *args, **kwargs):
     post = self.get_object()
     serializer = self.get_serializer(post, data=request.data, partial=True)
-    if serializer.is_valid():
-      serializer.save(modified=timezone.now())
-      if getattr(post, '_prefetched_objects_cache', None):
-        # If 'prefetch_related' has been applied to a queryset, we need to
-        # forcibly invalidate the prefetch cache on the instance.
-        post._prefetched_objects_cache = {}
-      return Response(serializer.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    if getattr(post, '_prefetched_objects_cache', None):
+      # If 'prefetch_related' has been applied to a queryset, we need to
+      # forcibly invalidate the prefetch cache on the instance.
+      post._prefetched_objects_cache = {}
+
+    print(serializer.data)
+    return Response(serializer.data)
   @action(detail=True, methods=['post'])
   def delete(self, request, pk=None):
     post = self.get_object()

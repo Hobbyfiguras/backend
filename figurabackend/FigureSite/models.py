@@ -6,6 +6,7 @@ from django_resized import ResizedImageField
 from django.db import models
 from django.utils.deconstruct import deconstructible
 from ordered_model.models import OrderedModel
+from dry_rest_permissions.generics import allow_staff_or_superuser, authenticated_users
 from .utils import unique_slugify
 import datetime
 
@@ -65,9 +66,11 @@ class Forum(OrderedModel):
         return True
 
     @staticmethod
+    @authenticated_users
     def has_create_thread_permission(self):
         return True
 
+    @authenticated_users
     def has_object_create_thread_permission(self, request):
         if self.only_staff_can_post:
             return request.user.is_staff
@@ -98,6 +101,14 @@ class Thread(models.Model):
         return super(Thread, self).save(*args, **kwargs)
     @property
     def last_post(self):
+        ordered_posts = self.posts.all().order_by('-modified')
+        if ordered_posts.count() > 0:
+            return self.posts.all().order_by('-modified')[0]
+        else:
+            return None
+
+    @property
+    def first_post(self):
         ordered_posts = self.posts.all().order_by('modified')
         if ordered_posts.count() > 0:
             return self.posts.all().order_by('modified')[0]
@@ -111,6 +122,14 @@ class Thread(models.Model):
     def has_object_read_permission(self, request):
         return True
     
+    @staticmethod    
+    @authenticated_users
+    def has_create_post_permission(request):
+        return True
+    @authenticated_users
+    def has_object_create_post_permission(self, request):
+        return True
+
     def __str__(self):
         return self.title
     
