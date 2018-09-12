@@ -15,7 +15,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'FigureSite',
-    'rest_auth',
     'django_resized',
     'ordered_model',
     'dry_rest_permissions'
