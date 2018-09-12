@@ -41,7 +41,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ('password', 'email',)
+        exclude = ('password', 'email', 'nsfw_enabled',)
 
 
 
