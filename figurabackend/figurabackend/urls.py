@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/mfc/', include('mfc.urls')),
     path('api/', include('FigureSite.urls')),
+    path('api/auth/register/', include('rest_auth.registration.urls')),
     path('api/auth/login/', TokenObtainPairView.as_view()),
     path('api/auth/refresh/', TokenRefreshView.as_view())
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

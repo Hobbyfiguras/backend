@@ -174,7 +174,7 @@ class PostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
   queryset = Post.objects.all()
   pagination_class = PostsPagination
   serializer_class = serializers.PostSerializer
-  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
+  permission_classes = (DRYPermissions,)
 
   def get_serializer_class(self):
     if self.action == 'partial_update':

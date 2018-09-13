@@ -11,6 +11,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -21,6 +25,8 @@ INSTALLED_APPS = [
 ]
 
 # Application definition
+
+SITE_ID = 1
 
 REST_USE_JWT = True
 
@@ -52,9 +58,13 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=30)
 }
 
+LANGUAGE_CODE = "es-es"
+USE_I18N = True
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

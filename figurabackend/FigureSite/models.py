@@ -142,7 +142,18 @@ class Post(models.Model):
     deleted = models.BooleanField(default=False)
     delete_reason = models.TextField(default='')
     modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    
+    @staticmethod
+    @authenticated_users
+    def has_write_permission(request):
+        return True
 
+    @authenticated_users
+    def has_object_write_permission(self, request):
+        if request.user.id == self.creator.id or request.user.is_staff:
+            return True
+        else:
+            return False
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
