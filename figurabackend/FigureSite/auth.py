@@ -1,5 +1,7 @@
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.serializers import TokenObtainSerializer, TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.six import text_type
 from allauth.account.models import EmailAddress
 from rest_framework import serializers
 from FigureSite.models import User
@@ -23,13 +25,15 @@ class CustomTokenObtainSerializer(TokenObtainSerializer):
         # `AllowAllUsersModelBackend`.  However, we explicitly prevent inactive
         # users from authenticating to enforce a reasonable policy and provide
         # sensible backwards compatibility with older Django versions.
-        if not EmailAddress.objects.filter(user=self.user, verified=True).exists():
-            raise serializers.ValidationError(
-                _('Tienes que verificar el correo antes'),
-            )
+
         if self.user is None or not self.user.is_active:
             raise serializers.ValidationError(
-                _('No active account found with the given credentials'),
+                _('No hemos encontrado una cuenta con esos credenciales'),
+            )
+
+        if not EmailAddress.objects.filter(user=self.user, verified=True).exists() and not self.user.is_staff:
+            raise serializers.ValidationError(
+                _('Tienes que verificar el correo antes'),
             )
 
         return {}
