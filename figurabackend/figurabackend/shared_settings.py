@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'dry_rest_permissions'
 ]
 
+ACCOUNT_ADAPTER ='FigureSite.adapters.FigureSiteAccountAdapter'
+
 # Application definition
 
 SITE_ID = 1
@@ -57,14 +59,9 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=30)
 }
-
-LANGUAGE_CODE = "es-es"
-USE_I18N = True
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -78,8 +75,8 @@ ROOT_URLCONF = 'figurabackend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
         'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates', 'allauth')],
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -116,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-es'
 
 TIME_ZONE = 'UTC'
 

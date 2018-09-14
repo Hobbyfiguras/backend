@@ -1,0 +1,4 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktrans %}Verifica tu dirección de correo electronico de Hobbyfiguras{% endblocktrans %}
+{% endautoescape %}

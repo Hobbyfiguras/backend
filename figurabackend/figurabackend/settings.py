@@ -27,7 +27,8 @@ ALLOWED_HOSTS = ['192.168.1.38', '127.0.0.1']
 
 HASHID_FIELD_SALT = "#jnz3ol^8a@bfb)05*&zspnc-+$+_qqi^03+sjz1s7ql8z*lm^"
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django_filebased_email_backend_ng.backend.EmailBackend'
+EMAIL_FILE_PATH = '/mnt/c/Users/EIREXE/figuritas/tmpmail' # change this to a proper location
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
