@@ -23,7 +23,7 @@ SECRET_KEY = 'cr+2488qp=f^jb8r13j@wwsq2mxyqmh#zi_y603=-)zjahxvd2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.38', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.1.132', '127.0.0.1']
 
 HASHID_FIELD_SALT = "#jnz3ol^8a@bfb)05*&zspnc-+$+_qqi^03+sjz1s7ql8z*lm^"
 

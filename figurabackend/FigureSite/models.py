@@ -92,12 +92,13 @@ class Thread(models.Model):
     modified = models.DateTimeField(editable=False)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     nsfw = models.BooleanField(default=False)
+    is_sticky = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.created = datetime.datetime.now()
             self.modified = datetime.datetime.now()
-            unique_slugify(self, self.title)
+        unique_slugify(self, self.title)
         return super(Thread, self).save(*args, **kwargs)
     @property
     def last_post(self):

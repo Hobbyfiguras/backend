@@ -80,7 +80,7 @@ class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
   @action(detail=True, pagination_class=ForumPagination)
   def threads(self, request, slug=None):
     forum = self.get_object()
-    page = self.paginate_queryset(forum.threads.all().order_by('-modified'))
+    page = self.paginate_queryset(forum.threads.all().order_by('-is_sticky', '-modified'))
     threads = {}
     if page is not None:
       serializer = serializers.ThreadSerializer(page, many=True, context={'request': request})

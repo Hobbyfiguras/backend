@@ -33,6 +33,7 @@ class AvatarField(serializers.ImageField):
         return super(serializers.ImageField, self).to_internal_value(obj)
 
 class PublicUserSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=User)
     avatar = AvatarField()
     #avatar = serializers.ImageField()
     def get_avatar(self, obj):
@@ -46,6 +47,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
 
 
 class FullUserSerializer(PublicUserSerializer):
+    id = HashIdField(model=User)
     class Meta:
         model = User
         exclude = ('password',)
@@ -53,7 +55,7 @@ class FullUserSerializer(PublicUserSerializer):
 class MinimalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username',)
+        fields = ('username',)
 
 class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
 
@@ -84,6 +86,7 @@ class MinimalThreadSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class BasePostSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=Post)
     content = serializers.SerializerMethodField()
     def get_content(self, obj):
         if not obj.deleted:
@@ -100,6 +103,7 @@ class PostSerializer(BasePostSerializer):
         fields = '__all__'
 
 class MinimalPostSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=Post)
     creator = MinimalUserSerializer()
     content = None
     class Meta:
@@ -112,7 +116,6 @@ class UpdatePostSerializer(serializers.ModelSerializer):
         fields = ('content',)
 class MinimalPostSerializerContent(BasePostSerializer):
     creator = MinimalUserSerializer()
-    thread = MinimalThreadSerializer()
     class Meta:
         model = Post
         fields = '__all__'
