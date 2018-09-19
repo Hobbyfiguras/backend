@@ -162,6 +162,13 @@ class Post(models.Model):
     modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
     
     @staticmethod
+    def has_read_permission(request):
+        return True
+
+    def has_object_read_permission(self, request):
+        return True
+
+    @staticmethod
     @authenticated_users
     def has_write_permission(request):
         return True

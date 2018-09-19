@@ -19,7 +19,6 @@ from django.http import Http404
 from rest_framework_serializer_extensions.views import ExternalIdViewMixin
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from dry_rest_permissions.generics import DRYPermissions
-
 class UserPostPagination(PageNumberPagination):
     page_size = 10
 
@@ -182,7 +181,7 @@ class PostsPagination(PageNumberPagination):
     max_page_size = 10
     page_size_query_param = 'page_size'
 
-class PostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class PostViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Post.objects.all()
   pagination_class = PostsPagination
   serializer_class = serializers.PostSerializer
@@ -218,6 +217,18 @@ class PostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gen
     except Http404:
       pass
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+  @action(detail=True, methods=['post'])
+  def report(self, request, pk=None):
+    post = self.get_object()
+    request.data['post'] = post.id
+    request.data['creator'] = request.user.id
+    report = serializers.CreateReportSerializer(data=request.data)
+    if report.is_valid():
+      report.save()
+      return Response(report.data, status=status.HTTP_201_CREATED)
+    else:
+      return Response(report.errors, status=status.HTTP_400_BAD_REQUEST)
 
   def get_throttles(self):
     if self.action in ['delete', 'partial_update']:

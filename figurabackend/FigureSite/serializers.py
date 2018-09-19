@@ -5,7 +5,7 @@ from django.templatetags.static import static
 from django.core.paginator import Paginator
 from .mixins import EagerLoadingMixin
 from rest_framework_serializer_extensions.fields import HashIdField
-
+from rest_framework_serializer_extensions.serializers import SerializerExtensionsMixin
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
@@ -85,7 +85,7 @@ class MinimalThreadSerializer(serializers.ModelSerializer):
         model = Thread
         fields = '__all__'
 
-class BasePostSerializer(serializers.ModelSerializer):
+class BasePostSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=Post)
     content = serializers.SerializerMethodField()
     def get_content(self, obj):
@@ -157,6 +157,11 @@ class ReportSerializer(serializers.ModelSerializer):
 
     post = PostSerializer()
 
+    class Meta:
+        model = Report
+        fields = '__all__'
+
+class CreateReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__'
