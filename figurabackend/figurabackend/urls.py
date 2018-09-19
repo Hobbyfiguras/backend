@@ -27,7 +27,7 @@ from rest_framework_simplejwt.views import (
 from FigureSite.auth import TokenObtainPairView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('djadmin/', admin.site.urls),
     path('api/mfc/', include('mfc.urls')),
     path('api/', include('FigureSite.urls')),
     path('api/auth/register/', include('rest_auth.registration.urls')),
