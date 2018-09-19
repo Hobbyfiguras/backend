@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post
+from .models import User, ForumCategory, Forum, Thread, Post, Report
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -22,6 +22,18 @@ from dry_rest_permissions.generics import DRYPermissions
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10
+
+class ReportPagination(PageNumberPagination):
+    page_size = 15
+    max_page_size = 15
+    page_size_query_param = 'page_size'
+
+class ReportViewSet(viewsets.ModelViewSet):
+  queryset = Report.objects.all()
+  permission_classes = (DRYPermissions,)
+  serializer_class = serializers.ReportSerializer
+  pagination_class = ReportPagination
+
 class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   queryset = User.objects.all()
   lookup_field = 'username'
@@ -60,9 +72,9 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
     else:
       threads = serializers.ThreadSerializer(user.threads.all().order_by('-created'), many=True, context={'request': request})
     return Response(threads.data)
-class ForumCategoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ForumCategoryViewSet(viewsets.ModelViewSet):
   queryset = ForumCategory.objects.all()
-  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
+  permission_classes = (DRYPermissions,)
   serializer_class = serializers.ForumCategorySerializer
   lookup_field = 'slug'
 

@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread
+from .models import User, ForumCategory, Forum, Post, Thread, Report
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -151,4 +151,12 @@ class ForumCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ForumCategory
         lookup_field = 'slug'
-        fields = ('id', 'name', 'description', 'forums', 'slug',)
+        fields = ('id', 'name', 'description', 'forums', 'slug', 'order', )
+
+class ReportSerializer(serializers.ModelSerializer):
+
+    post = PostSerializer()
+
+    class Meta:
+        model = Report
+        fields = '__all__'

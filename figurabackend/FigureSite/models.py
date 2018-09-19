@@ -41,6 +41,23 @@ class ForumCategory(OrderedModel):
     description = models.CharField(max_length=200, null=True, blank=True)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
 
+
+    @staticmethod
+    def has_read_permission(request):
+        return True
+
+    def has_object_read_permission(self, request):
+        return True
+
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_write_permission(request):
+        return False
+
+    @allow_staff_or_superuser
+    def has_object_write_permission(self, request):
+        return False
+
     def __str__(self):
         return self.name
     class Meta:
@@ -82,7 +99,7 @@ class Forum(OrderedModel):
         # Only save slugs on first save
         if not self.id:
             unique_slugify(self, self.name)
-        super(Forum, self).save(*args,**kwargs)
+        super(Forum, self).save(*args,**kwargs)    
 
 class Thread(models.Model):
     title = models.CharField(max_length=100)
@@ -133,7 +150,7 @@ class Thread(models.Model):
 
     def __str__(self):
         return self.title
-    
+
 class Post(models.Model):
     creator = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
     thread = models.ForeignKey(Thread, related_name="posts", on_delete=models.CASCADE)
@@ -161,3 +178,34 @@ class Post(models.Model):
             self.created = datetime.datetime.now()
             self.modified = datetime.datetime.now()
         return super(Post, self).save(*args, **kwargs)
+
+    
+class Report(models.Model):
+    creator = models.ForeignKey(User, related_name="reports", on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, related_name="reports", on_delete=models.CASCADE)
+    reason = models.TextField()
+    created = models.DateTimeField(editable=False)
+
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_read_permission(request):
+        return False
+
+    @allow_staff_or_superuser
+    def has_object_read_permission(request):
+        return False
+
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_write_permission(request):
+        return False
+
+    @allow_staff_or_superuser
+    def has_object_write_permission(self, request):
+        return False
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = datetime.datetime.now()
+        return super(Report, self).save(*args, **kwargs)
