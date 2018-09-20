@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from .mixins import EagerLoadingMixin
 from rest_framework_serializer_extensions.fields import HashIdField
 from rest_framework_serializer_extensions.serializers import SerializerExtensionsMixin
+from drf_extra_fields.fields import Base64ImageField
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
@@ -134,17 +135,6 @@ class ThreadSerializer(serializers.ModelSerializer):
         model = Thread
         fields = '__all__'
 
-class FullForumSerializer(serializers.ModelSerializer, EagerLoadingMixin):
-    _PREFETCH_RELATED_FIELDS = ['threads']
-    threads = ThreadSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Forum
-        lookup_field = 'slug'
-        fields = '__all__'
-
-
-
 class ForumCategorySerializer(serializers.ModelSerializer):
     forums = BasicForumSerializer(many=True, read_only=True)
     
@@ -152,6 +142,22 @@ class ForumCategorySerializer(serializers.ModelSerializer):
         model = ForumCategory
         lookup_field = 'slug'
         fields = ('id', 'name', 'description', 'forums', 'slug', 'order', )
+
+class FullForumSerializer(serializers.ModelSerializer):
+    threads = ThreadSerializer(many=True, read_only=True)
+    category = ForumCategorySerializer()
+
+    class Meta:
+        model = Forum
+        lookup_field = 'slug'
+        fields = '__all__'
+
+class CreateForumSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required = False, allow_blank = True, allow_null = True)
+    icon = Base64ImageField(required = False, allow_null = True)
+    class Meta:
+        model = Forum
+        fields = '__all__'
 
 class ReportSerializer(serializers.ModelSerializer):
 

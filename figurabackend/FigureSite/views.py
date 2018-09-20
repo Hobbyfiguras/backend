@@ -82,11 +82,28 @@ class ForumPagination(PageNumberPagination):
     max_page_size = 20
     page_size_query_param = 'page_size'
 
-class ForumViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Forum.objects.all()
   permission_classes = (DRYPermissions,)
   serializer_class = serializers.FullForumSerializer
   lookup_field = 'slug'
+
+  def get_serializer_class(self):
+    if self.action == 'create' or self.action == 'partial_update':
+      return serializers.CreateForumSerializer
+    return serializers.FullForumSerializer
+
+  @action(detail=True, methods=['post'])
+  def move_up(self, request, slug=None):
+    forum = self.get_object()
+    forum.up()
+    return Response({}, status=status.HTTP_200_OK)
+
+  @action(detail=True, methods=['post'])
+  def move_down(self, request, slug=None):
+    forum = self.get_object()
+    forum.down()
+    return Response({}, status=status.HTTP_200_OK)
 
   @action(detail=True, pagination_class=ForumPagination)
   def threads(self, request, slug=None):

@@ -24,7 +24,18 @@ class AvatarRename(object):
         # return the whole path to the file
         return os.path.join("avatars", filename)
 
+@deconstructible
+class ForumIconRename(object):
+    def __call__(self, instance, filename):
+        # Remove the extension from the filename
+        ext = filename.split('.')[-1]
+
+        filename = '{}.{}'.format(instance.slug, ext)
+        # return the whole path to the file
+        return os.path.join("forum_icons", filename)
+
 avatar_rename = AvatarRename()
+forum_icon_rename = ForumIconRename()
 
 class User(AbstractUser):
     objects = MyUserManager()
@@ -74,6 +85,8 @@ class Forum(OrderedModel):
     category = models.ForeignKey(ForumCategory, related_name="forums", on_delete=models.CASCADE)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     only_staff_can_post = models.BooleanField(default=False)
+    icon = ResizedImageField(size=[128, 128], upload_to=forum_icon_rename, force_format='PNG', null=True, blank=True)
+    order_with_respect_to = 'category'
 
     @staticmethod
     def has_read_permission(request):
@@ -92,6 +105,15 @@ class Forum(OrderedModel):
         if self.only_staff_can_post:
             return request.user.is_staff
         return True
+
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_write_permission(request):
+        return False
+
+    @allow_staff_or_superuser
+    def has_object_write_permission(request):
+        return False
 
     def __str__(self):
         return self.name

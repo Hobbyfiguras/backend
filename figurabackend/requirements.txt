@@ -40,3 +40,4 @@ six==1.11.0
 urllib3==1.23
 xmljson==0.1.9
 yarg==0.1.9
+django-extra-fields==1.0.0
