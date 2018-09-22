@@ -85,7 +85,7 @@ class Forum(OrderedModel):
     category = models.ForeignKey(ForumCategory, related_name="forums", on_delete=models.CASCADE)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     only_staff_can_post = models.BooleanField(default=False)
-    icon = ResizedImageField(size=[128, 128], upload_to=forum_icon_rename, force_format='PNG', null=True, blank=True)
+    icon = ResizedImageField(size=[128, 128], crop=['middle', 'center'], upload_to=forum_icon_rename, force_format='PNG', null=True, blank=True)
     order_with_respect_to = 'category'
 
     @staticmethod

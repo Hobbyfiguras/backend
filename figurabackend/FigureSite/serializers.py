@@ -152,7 +152,7 @@ class FullForumSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
         fields = '__all__'
 
-class CreateForumSerializer(serializers.ModelSerializer):
+class CreateForumSerializer(BasicForumSerializer):
     description = serializers.CharField(required = False, allow_blank = True, allow_null = True)
     icon = Base64ImageField(required = False, allow_null = True)
     class Meta:

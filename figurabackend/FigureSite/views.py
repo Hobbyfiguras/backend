@@ -26,6 +26,8 @@ class ReportPagination(PageNumberPagination):
     page_size = 15
     max_page_size = 15
     page_size_query_param = 'page_size'
+    class Meta:
+      ordering = ['created']
 
 class ReportViewSet(viewsets.ModelViewSet):
   queryset = Report.objects.all()
