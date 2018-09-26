@@ -43,7 +43,7 @@ class VoteTypeRename(object):
 
         filename = '{}.{}'.format(instance.slug, ext)
         # return the whole path to the file
-        return os.path.join("forum_icons", filename)
+        return os.path.join("forum_votes", filename)
 
 avatar_rename = AvatarRename()
 forum_icon_rename = ForumIconRename()
