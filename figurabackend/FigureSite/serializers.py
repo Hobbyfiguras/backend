@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -7,6 +7,7 @@ from .mixins import EagerLoadingMixin
 from rest_framework_serializer_extensions.fields import HashIdField
 from rest_framework_serializer_extensions.serializers import SerializerExtensionsMixin
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
@@ -95,9 +96,34 @@ class BasePostSerializer(SerializerExtensionsMixin, serializers.ModelSerializer)
         else:
             return '< Post eliminado >'
 
+class UserVoteSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=UserVote)
+    class Meta:
+        model = UserVote
+        fields = ('id', 'name', 'image',)
+
+class VoteTypeSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=VoteType)
+    class Meta:
+        model = VoteType
+        fields = ('name', 'order', 'icon', 'id',)
+
 class PostSerializer(BasePostSerializer):
     creator = PublicUserSerializer()
     thread = MinimalThreadSerializer()
+    votes = serializers.SerializerMethodField()
+    def get_votes(self, obj):
+        votes = []
+        for user_vote in obj.votes.all():
+            if not any(vote.id == user_vote.vote_type.id for vote in votes):
+                serializer = VoteTypeSerializer(user_vote.vote_type, context=self.context)
+                votes.append({**serializer.data, **{'vote_count': 0, 'users': []}})
+            for i, vote_type in enumerate(votes):
+                if vote_type['id'] == user_vote.vote_type.id:
+                    votes[i]['vote_count'] += 1
+                    votes[i]['users'].append(user_vote.user.username)
+        return votes
+        
 
     class Meta:
         model = Post

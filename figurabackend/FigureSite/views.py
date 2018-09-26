@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post, Report
+from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,7 +17,8 @@ from django.utils import timezone
 from .mixins import EagerLoadingMixin
 from django.http import Http404
 from rest_framework_serializer_extensions.views import ExternalIdViewMixin
-from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
+from rest_framework.views import APIView
+from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id, internal_id_from_model_and_external_id
 from dry_rest_permissions.generics import DRYPermissions
 class UserPostPagination(PageNumberPagination):
     page_size = 10
@@ -249,9 +250,34 @@ class PostViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveMod
     else:
       return Response(report.errors, status=status.HTTP_400_BAD_REQUEST)
 
+  @action(detail=True, methods=['post'])
+  def vote(self, request, pk=None):
+    post = self.get_object()
+    vote_type = VoteType.objects.get(id=internal_id_from_model_and_external_id(VoteType, request.data['vote_type']))
+    if vote_type:
+      vote_result = post.vote(request.user, vote_type)
+      if vote_result == 'ok':
+        return Response({'success': "Voto aceptado"}, status=status.HTTP_200_OK)
+      else:
+        return Response({'error': 'Ya has votado este post antes'}, status=status.HTTP_403_FORBIDDEN)
+    else:
+      return Response({'error': 'No existe este tipo de voto'}, status=status.HTTP_400_BAD_REQUEST)
+  
   def get_throttles(self):
     if self.action in ['delete', 'partial_update']:
         self.throttle_scope = 'posts'
     else:
         self.throttle_scope = None
     return super().get_throttles()
+
+class ForumSettings(APIView):
+  """
+  View to list all forum settings (such as votes).
+  """
+
+  def get(self, request, format=None):
+    """
+    Return all data
+    """
+    vote_types = serializers.VoteTypeSerializer(VoteType.objects.all(), many=True, context={'request': request})
+    return Response({'vote_types': vote_types.data})

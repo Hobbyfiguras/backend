@@ -8,6 +8,7 @@ from django.utils.deconstruct import deconstructible
 from ordered_model.models import OrderedModel
 from dry_rest_permissions.generics import allow_staff_or_superuser, authenticated_users
 from .utils import unique_slugify
+from django.db import IntegrityError
 import datetime
 
 class MyUserManager(UserManager):
@@ -34,8 +35,19 @@ class ForumIconRename(object):
         # return the whole path to the file
         return os.path.join("forum_icons", filename)
 
+@deconstructible
+class VoteTypeRename(object):
+    def __call__(self, instance, filename):
+        # Remove the extension from the filename
+        ext = filename.split('.')[-1]
+
+        filename = '{}.{}'.format(instance.slug, ext)
+        # return the whole path to the file
+        return os.path.join("forum_icons", filename)
+
 avatar_rename = AvatarRename()
 forum_icon_rename = ForumIconRename()
+vote_type_rename = VoteTypeRename()
 
 class User(AbstractUser):
     objects = MyUserManager()
@@ -201,6 +213,20 @@ class Post(models.Model):
             return True
         else:
             return False
+
+    def vote(self, user, vote_type):
+        try:
+            self.votes.create(user=user, post=self, vote_type=vote_type)
+        except IntegrityError:
+            return 'already_upvoted'
+        return 'ok'
+
+    def report(self, user, reason=''):
+        try:
+            self.reports.create(creator=user, post=self, reason=reason)
+        except IntegrityError:
+            return 'already_reported'
+        return 'ok'
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
@@ -238,3 +264,25 @@ class Report(models.Model):
         if not self.id:
             self.created = datetime.datetime.now()
         return super(Report, self).save(*args, **kwargs)
+    class Meta:
+        unique_together = ('creator', 'post')
+
+class VoteType(OrderedModel):
+    name = models.CharField(max_length=80)
+    icon = ResizedImageField(size=[32, 32], crop=['middle', 'center'], force_format='PNG', upload_to=vote_type_rename)
+    slug = models.SlugField(max_length=100, blank=True, unique=True)
+    def __str__(self):
+        return self.name
+    def save(self, *args, **kwargs):
+        # Only save slugs on first save
+        if not self.id:
+            unique_slugify(self, self.name)
+        super(VoteType, self).save(*args,**kwargs)
+
+class UserVote(models.Model):
+    user = models.ForeignKey(User, related_name="votes", on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, related_name="votes", on_delete=models.CASCADE)
+    vote_type = models.ForeignKey(VoteType, related_name="votes", on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'post')
