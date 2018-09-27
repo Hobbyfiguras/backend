@@ -60,10 +60,11 @@ class MinimalUserSerializer(serializers.ModelSerializer):
         fields = ('username',)
 
 class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
-
+    id = HashIdField(model=Post, required=False)
     class Meta:
         model = Post
         fields = ('id', 'creator', 'content', 'thread',)
+
 
 class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
     class Meta:
@@ -115,13 +116,18 @@ class PostSerializer(BasePostSerializer):
     def get_votes(self, obj):
         votes = []
         for user_vote in obj.votes.all():
-            if not any(vote.id == user_vote.vote_type.id for vote in votes):
+            for i, vote in enumerate(votes):
+                if vote['id'] == external_id_from_model_and_internal_id(VoteType, user_vote.vote_type.id):
+                    break
+            else:
                 serializer = VoteTypeSerializer(user_vote.vote_type, context=self.context)
                 votes.append({**serializer.data, **{'vote_count': 0, 'users': []}})
-            for i, vote_type in enumerate(votes):
-                if vote_type['id'] == user_vote.vote_type.id:
+
+            for i, vote in enumerate(votes):
+                if vote['id'] == external_id_from_model_and_internal_id(VoteType, user_vote.vote_type.id):
                     votes[i]['vote_count'] += 1
                     votes[i]['users'].append(user_vote.user.username)
+                    break
         return votes
         
 

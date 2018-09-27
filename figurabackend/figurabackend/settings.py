@@ -40,4 +40,4 @@ DATABASES = {
     }
 }
 
-MEDIA_ROOT='/home/tarda/figuresite/backend/media'
+MEDIA_ROOT='/mnt/c/Users/EIREXE/figuritas/backend/media'

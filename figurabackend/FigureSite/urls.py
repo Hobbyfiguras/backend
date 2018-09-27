@@ -14,5 +14,5 @@ router.register(r'posts', views.PostViewSet)
 router.register(r'reports', views.ReportViewSet)
 urlpatterns = [
     path('', include(router.urls)),
-    path('settings', views.ForumSettings.as_view())
+    path('settings/', views.ForumSettings.as_view())
 ]

@@ -257,7 +257,9 @@ class PostViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveMod
     if vote_type:
       vote_result = post.vote(request.user, vote_type)
       if vote_result == 'ok':
-        return Response({'success': "Voto aceptado"}, status=status.HTTP_200_OK)
+        return Response({'success': "Voto añadido"}, status=status.HTTP_200_OK)
+      elif vote_result == 'self_vote':
+        return Response({'error': 'No puedes votarte a ti mismo'}, status=status.HTTP_403_FORBIDDEN)
       else:
         return Response({'error': 'Ya has votado este post antes'}, status=status.HTTP_403_FORBIDDEN)
     else:
@@ -274,6 +276,8 @@ class ForumSettings(APIView):
   """
   View to list all forum settings (such as votes).
   """
+
+  permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
   def get(self, request, format=None):
     """

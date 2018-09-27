@@ -214,7 +214,18 @@ class Post(models.Model):
         else:
             return False
 
+    @staticmethod
+    @authenticated_users
+    def has_vote_permission(request):
+        return True
+
+    @authenticated_users
+    def has_object_vote_permission(self, request):
+        return True
+
     def vote(self, user, vote_type):
+        if user == self.creator:
+            return 'self_vote'
         try:
             self.votes.create(user=user, post=self, vote_type=vote_type)
         except IntegrityError:
