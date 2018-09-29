@@ -21,7 +21,8 @@ INSTALLED_APPS = [
     'FigureSite',
     'django_resized',
     'ordered_model',
-    'dry_rest_permissions'
+    'dry_rest_permissions',
+    'channels'
 ]
 
 ACCOUNT_ADAPTER ='FigureSite.adapters.FigureSiteAccountAdapter'
@@ -133,3 +134,5 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'FigureSite.User'
+
+ASGI_APPLICATION = 'figurabackend.routing.application'
