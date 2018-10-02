@@ -9,7 +9,9 @@ from ordered_model.models import OrderedModel
 from dry_rest_permissions.generics import allow_staff_or_superuser, authenticated_users
 from .utils import unique_slugify
 from django.db import IntegrityError
+from django.contrib.contenttypes.fields import GenericForeignKey
 import datetime
+from django.contrib.contenttypes.models import ContentType
 
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
@@ -297,3 +299,13 @@ class UserVote(models.Model):
 
     class Meta:
         unique_together = ('user', 'post')
+
+class Notification(models.Model):
+    # notification_post_sub
+    notification_type = models.CharField(max_length=200)
+    notification_actor = models.ForeignKey(User, related_name='+', on_delete=models.CASCADE)
+    notification_users = models.ManyToManyField(User, related_name='notifications')
+    notification_object_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    notification_object_id = models.PositiveIntegerField()
+    notification_object = GenericForeignKey('notification_object_type', 'notification_object_id')
+    read = models.BooleanField(default=False)

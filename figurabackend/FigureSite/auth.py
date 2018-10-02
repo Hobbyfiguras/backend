@@ -1,12 +1,21 @@
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.serializers import TokenObtainSerializer, TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication, JWTAuthentication
+import json
 from django.utils.six import text_type
 from allauth.account.models import EmailAddress
 from rest_framework import serializers
 from FigureSite.models import User
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
+from channels.auth import AuthMiddlewareStack
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import AnonymousUser
+from rest_framework_simplejwt.exceptions import InvalidToken
+from django.db import close_old_connections
+from django.contrib.auth.models import AnonymousUser
+
 class CustomTokenObtainSerializer(TokenObtainSerializer):
     def validate(self, attrs):
         u = User.objects.filter(email__iexact=attrs[self.username_field]).first()
@@ -61,3 +70,27 @@ class TokenObtainPairView(TokenViewBase):
     serializer_class = CustomTokenObtainPairSerializer
 
 token_obtain_pair = TokenObtainPairView.as_view()
+
+class TokenAuthMiddleware:
+    """
+    Token authorization middleware for Django Channels 2
+    """
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    def __call__(self, scope):
+        if scope['query_string']:
+            query_string = scope['query_string'].decode('utf-8')
+            if query_string.startswith('token='):
+                try:
+                    token = query_string.replace('token=', '')
+                    auth = JWTAuthentication()
+                    validated_token = auth.get_validated_token(token)
+                    scope['user'] = auth.get_user(validated_token)
+                    close_old_connections()
+                except InvalidToken:
+                    scope['user'] = AnonymousUser()
+        return self.inner(scope)
+
+TokenAuthMiddlewareStack = lambda inner: TokenAuthMiddleware(AuthMiddlewareStack(inner))

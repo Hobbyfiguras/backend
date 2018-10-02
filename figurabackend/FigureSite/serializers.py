@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -37,9 +37,6 @@ class AvatarField(serializers.ImageField):
 class PublicUserSerializer(serializers.ModelSerializer):
     id = HashIdField(model=User)
     avatar = AvatarField()
-    #avatar = serializers.ImageField()
-    def get_avatar(self, obj):
-        print("get avatar")
 
 
     class Meta:
@@ -71,7 +68,7 @@ class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
         model = Thread
         fields = ('creator', 'title', 'forum', 'nsfw',)
 
-class BasicForumSerializer(serializers.ModelSerializer):
+class BasicForumSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     thread_count = serializers.SerializerMethodField()
 
     def get_thread_count(self, obj):
@@ -82,8 +79,9 @@ class BasicForumSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
         fields = '__all__'
 
-class MinimalThreadSerializer(serializers.ModelSerializer):
+class MinimalThreadSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     forum = BasicForumSerializer()
+    id = HashIdField(model=Thread)
     class Meta:
         model = Thread
         fields = '__all__'
@@ -203,3 +201,7 @@ class CreateReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__'
+
+class NotificationSerializer(BasicForumSerializer, serializers.ModelSerializer):
+    class Meta:
+        model = Notification

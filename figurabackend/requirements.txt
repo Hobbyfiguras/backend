@@ -43,3 +43,4 @@ yarg==0.1.9
 django-extra-fields==1.0.0
 uvicorn==0.3.6
 gunicorn==19.9.0
+channels==2.1.3

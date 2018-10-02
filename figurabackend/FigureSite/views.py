@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType
+from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,6 +20,8 @@ from rest_framework_serializer_extensions.views import ExternalIdViewMixin
 from rest_framework.views import APIView
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id, internal_id_from_model_and_external_id
 from dry_rest_permissions.generics import DRYPermissions
+from .notifications import send_notification
+
 class UserPostPagination(PageNumberPagination):
     page_size = 10
 
@@ -182,9 +184,18 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
     request.data['thread'] = thread.id
     serializer = serializers.CreatePostSerializer(data=request.data)
     if serializer.is_valid():
+      print("REACHED")
       serializer.save()
       thread.modified = timezone.now()
       thread.save()
+
+      notification = Notification.objects.create(notification_type="notification_post_sub", notification_actor=request.user, notification_object=thread)
+      notification.notification_users.add(request.user)
+      notification.save()
+      send_notification(request, notification)
+
+      user_serialized = serializers.PublicUserSerializer(request.user, context={'request': request})
+
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
