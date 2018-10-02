@@ -23,7 +23,7 @@ with open('/etc/secret_key.txt') as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', '95.179.177.28']
+ALLOWED_HOSTS = ['127.0.0.1', 'hobbyfiguras.moe']
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
