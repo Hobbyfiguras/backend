@@ -43,3 +43,4 @@ DATABASES = {
 
 MEDIA_ROOT='/server/live/media'
 STATIC_ROOT='/server/live/static'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
