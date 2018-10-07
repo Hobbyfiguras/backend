@@ -53,3 +53,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = '127.0.0.1'
 EMAIL_HOST_USER = 'noreply@hobbyfiguras.moe'
 EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = 'noreply@hobbyfiguras.moe'
