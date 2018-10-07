@@ -12,7 +12,8 @@ from django.db import IntegrityError
 from django.contrib.contenttypes.fields import GenericForeignKey
 import datetime
 from django.contrib.contenttypes.models import ContentType
-
+from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
+from django.apps import apps
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -23,7 +24,7 @@ class AvatarRename(object):
         # Remove the extension from the filename
         ext = filename.split('.')[-1]
 
-        filename = '{}.{}'.format(instance.id, ext)
+        filename = '{}.{}'.format(external_id_from_model_and_internal_id(apps.get_model(app_label="FigureSite", model_name="User"), instance.id), ext)
         # return the whole path to the file
         return os.path.join("avatars", filename)
 
@@ -146,6 +147,7 @@ class Thread(models.Model):
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     nsfw = models.BooleanField(default=False)
     is_sticky = models.BooleanField(default=False)
+    subscribers = models.ManyToManyField(User, related_name="subscribed_thread")
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -196,7 +198,12 @@ class Post(models.Model):
     deleted = models.BooleanField(default=False)
     delete_reason = models.TextField(default='')
     modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
-    
+
+    @property
+    def page(self):
+        return int(self.__class__.objects.filter(thread=self.thread).filter(
+            created__gt=self.created).count() / 20 + 1)
+
     @staticmethod
     def has_read_permission(request):
         return True
@@ -303,9 +310,27 @@ class UserVote(models.Model):
 class Notification(models.Model):
     # notification_post_sub
     notification_type = models.CharField(max_length=200)
-    notification_actor = models.ForeignKey(User, related_name='+', on_delete=models.CASCADE)
-    notification_users = models.ManyToManyField(User, related_name='notifications')
-    notification_object_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    notification_object_id = models.PositiveIntegerField()
-    notification_object = GenericForeignKey('notification_object_type', 'notification_object_id')
+    actor = models.ForeignKey(User, related_name='+', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
+    object_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    notification_object = GenericForeignKey('object_type', 'object_id')
     read = models.BooleanField(default=False)
+
+    @staticmethod
+    @authenticated_users
+    def has_read_permission(request):
+        return True
+
+    @authenticated_users
+    def has_object_read_permission(self, request):
+        return request.user == self.notification_user
+
+    @staticmethod
+    @authenticated_users
+    def has_update_permission(request):
+        return True
+
+    @authenticated_users
+    def has_object_update_permission(self, request):
+        return request.user == self.notification_user

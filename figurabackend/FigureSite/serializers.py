@@ -69,6 +69,7 @@ class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
         fields = ('creator', 'title', 'forum', 'nsfw',)
 
 class BasicForumSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=Forum)
     thread_count = serializers.SerializerMethodField()
 
     def get_thread_count(self, obj):
@@ -82,6 +83,7 @@ class BasicForumSerializer(SerializerExtensionsMixin, serializers.ModelSerialize
 class MinimalThreadSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     forum = BasicForumSerializer()
     id = HashIdField(model=Thread)
+    creator = MinimalUserSerializer()
     class Meta:
         model = Thread
         fields = '__all__'
@@ -111,6 +113,7 @@ class PostSerializer(BasePostSerializer):
     creator = PublicUserSerializer()
     thread = MinimalThreadSerializer()
     votes = serializers.SerializerMethodField()
+    page = serializers.ReadOnlyField()
     def get_votes(self, obj):
         votes = []
         for user_vote in obj.votes.all():
@@ -185,6 +188,7 @@ class FullForumSerializer(serializers.ModelSerializer):
 class CreateForumSerializer(BasicForumSerializer):
     description = serializers.CharField(required = False, allow_blank = True, allow_null = True)
     icon = Base64ImageField(required = False, allow_null = True)
+    id = None
     class Meta:
         model = Forum
         fields = '__all__'
@@ -202,6 +206,21 @@ class CreateReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = '__all__'
 
-class NotificationSerializer(BasicForumSerializer, serializers.ModelSerializer):
+class NotificationObjectField(serializers.RelatedField):
+    def to_representation(self, value):
+        if isinstance(value, Thread):
+            return MinimalThreadSerializer(value).data
+
+class NotificationUserSerializer(serializers.ModelSerializer):
+    avatar = AvatarField()
+    class Meta:
+        model = User
+        fields = ('username', 'avatar',)
+
+class NotificationSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=Notification)
+    notification_actor = NotificationUserSerializer()
+    notification_object = NotificationObjectField(read_only = True)
     class Meta:
         model = Notification
+        exclude = ('notification_object_id', 'notification_user', 'notification_object_type',)

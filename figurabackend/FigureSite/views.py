@@ -184,13 +184,11 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
     request.data['thread'] = thread.id
     serializer = serializers.CreatePostSerializer(data=request.data)
     if serializer.is_valid():
-      print("REACHED")
       serializer.save()
       thread.modified = timezone.now()
       thread.save()
 
-      notification = Notification.objects.create(notification_type="notification_post_sub", notification_actor=request.user, notification_object=thread)
-      notification.notification_users.add(request.user)
+      notification = Notification.objects.create(notification_type="notification_post_sub", notification_user = request.user, notification_actor=request.user, notification_object=thread)
       notification.save()
       send_notification(request, notification)
 
@@ -207,6 +205,36 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
           self.throttle_scope = None
       return super().get_throttles()
 
+
+class NotificationsPagination(PageNumberPagination):
+    page_size = 5
+    max_page_size = 5
+    page_size_query_param = 'page_size'
+
+class NotificationsViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+  permission_classes = (DRYPermissions,)
+  serializer_class = serializers.NotificationSerializer
+  pagination_class = NotificationsPagination
+
+  def get_queryset(self):
+    if self.action == 'unread':
+      return Notification.objects.filter(notification_user=self.request.user, read=False)
+    else:
+      return Notification.objects.filter(notification_user=self.request.user)
+  
+  @action(detail=False)
+  def unread(self, request, pk=None):
+    queryset = self.filter_queryset(self.get_queryset())
+
+    page = self.paginate_queryset(queryset)
+    if page is not None:
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    serializer = self.get_serializer(queryset, many=True)
+
+    return Resposne(serializer.data)
+  
 class PostsPagination(PageNumberPagination):
     page_size = 10
     max_page_size = 10

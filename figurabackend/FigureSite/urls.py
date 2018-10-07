@@ -12,6 +12,7 @@ router.register(r'forum', views.ForumViewSet)
 router.register(r'thread', views.ThreadViewSet)
 router.register(r'posts', views.PostViewSet)
 router.register(r'reports', views.ReportViewSet)
+router.register(r'notifications', views.NotificationsViewSet, base_name='notifications')
 urlpatterns = [
     path('', include(router.urls)),
     path('settings/', views.ForumSettings.as_view())

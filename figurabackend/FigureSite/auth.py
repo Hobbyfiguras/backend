@@ -84,13 +84,18 @@ class TokenAuthMiddleware:
             query_string = scope['query_string'].decode('utf-8')
             if query_string.startswith('token='):
                 try:
+                    print("token OK")
                     token = query_string.replace('token=', '')
+                    print("token is %s" % token)
                     auth = JWTAuthentication()
                     validated_token = auth.get_validated_token(token)
                     scope['user'] = auth.get_user(validated_token)
                     close_old_connections()
                 except InvalidToken:
                     scope['user'] = AnonymousUser()
+                    print("token invalid")
+        else:
+            print("no QS")
         return self.inner(scope)
 
 TokenAuthMiddlewareStack = lambda inner: TokenAuthMiddleware(AuthMiddlewareStack(inner))
