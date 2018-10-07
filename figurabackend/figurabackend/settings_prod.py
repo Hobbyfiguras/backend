@@ -44,6 +44,8 @@ DATABASES = {
     }
 }
 
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ''
+
 MEDIA_ROOT='/server/live/media'
 STATIC_ROOT='/server/live/static'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
