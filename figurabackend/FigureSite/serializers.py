@@ -86,7 +86,7 @@ class MinimalThreadSerializer(SerializerExtensionsMixin, serializers.ModelSerial
     creator = MinimalUserSerializer()
     class Meta:
         model = Thread
-        fields = '__all__'
+        exclude = ('subscribers',)
 
 class BasePostSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=Post)
@@ -114,6 +114,7 @@ class PostSerializer(BasePostSerializer):
     thread = MinimalThreadSerializer()
     votes = serializers.SerializerMethodField()
     page = serializers.ReadOnlyField()
+
     def get_votes(self, obj):
         votes = []
         for user_vote in obj.votes.all():
@@ -166,7 +167,7 @@ class ThreadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Thread
-        fields = '__all__'
+        exclude = ('subscribers',)
 
 class ForumCategorySerializer(serializers.ModelSerializer):
     forums = BasicForumSerializer(many=True, read_only=True)
@@ -206,10 +207,18 @@ class CreateReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = '__all__'
 
+class NotificationPostSerializer(BasePostSerializer):
+    creator = MinimalUserSerializer()
+    page = serializers.ReadOnlyField()
+    thread = MinimalThreadSerializer()
+    class Meta:
+        model = Post
+        fields = '__all__'
+
 class NotificationObjectField(serializers.RelatedField):
     def to_representation(self, value):
-        if isinstance(value, Thread):
-            return MinimalThreadSerializer(value).data
+        if isinstance(value, Post):
+            return NotificationPostSerializer(value).data
 
 class NotificationUserSerializer(serializers.ModelSerializer):
     avatar = AvatarField()
@@ -219,8 +228,8 @@ class NotificationUserSerializer(serializers.ModelSerializer):
 
 class NotificationSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=Notification)
-    notification_actor = NotificationUserSerializer()
+    actor = NotificationUserSerializer()
     notification_object = NotificationObjectField(read_only = True)
     class Meta:
         model = Notification
-        exclude = ('notification_object_id', 'notification_user', 'notification_object_type',)
+        exclude = ('object_id', 'user', 'object_type',)

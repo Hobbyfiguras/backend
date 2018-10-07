@@ -175,8 +175,13 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
       posts = self.get_paginated_response(serializer.data).data
     else:
       posts = serializers.PostSerializer(thread.posts, many=True, context={'request': request})
-    return Response({**{'posts': posts}, **serializers.ThreadSerializer(thread).data})
+    return Response({**{'posts': posts, 'subscribed': request.user in thread.subscribers.all()}, **serializers.ThreadSerializer(thread).data})
 
+  @action(detail=True, methods=['post'])
+  def change_subscription(self, request, pk=None):
+    thread = self.get_object()
+    thread.change_user_subscription(request.user, request.data['subscribed'])
+    return Response({}, status=status.HTTP_200_OK)
   @action(detail=True, methods=['post'])
   def create_post(self, request, pk=None):
     thread = self.get_object()
@@ -188,11 +193,10 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
       thread.modified = timezone.now()
       thread.save()
 
-      notification = Notification.objects.create(notification_type="notification_post_sub", notification_user = request.user, notification_actor=request.user, notification_object=thread)
-      notification.save()
-      send_notification(request, notification)
-
-      user_serialized = serializers.PublicUserSerializer(request.user, context={'request': request})
+      for subscriber in thread.subscribers.all():
+        notification = Notification.objects.create(notification_type="notification_post_sub", user = subscriber, actor=request.user, notification_object=serializer.instance)
+        notification.save()
+        send_notification(request, notification)
 
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
@@ -218,9 +222,9 @@ class NotificationsViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.
 
   def get_queryset(self):
     if self.action == 'unread':
-      return Notification.objects.filter(notification_user=self.request.user, read=False)
+      return Notification.objects.filter(user=self.request.user, read=False)
     else:
-      return Notification.objects.filter(notification_user=self.request.user)
+      return Notification.objects.filter(user=self.request.user)
   
   @action(detail=False)
   def unread(self, request, pk=None):

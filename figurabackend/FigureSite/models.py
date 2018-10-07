@@ -147,7 +147,14 @@ class Thread(models.Model):
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     nsfw = models.BooleanField(default=False)
     is_sticky = models.BooleanField(default=False)
-    subscribers = models.ManyToManyField(User, related_name="subscribed_thread")
+    subscribers = models.ManyToManyField(User, related_name="subscribed_threads")
+
+    def change_user_subscription(self, user, subscribed):
+        if subscribed:
+            self.subscribers.add(user)
+        else:
+            self.subscribers.remove(user)
+        self.save()
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -184,6 +191,14 @@ class Thread(models.Model):
         return True
     @authenticated_users
     def has_object_create_post_permission(self, request):
+        return True
+
+    @staticmethod    
+    @authenticated_users
+    def has_change_subscription_permission(request):
+        return True
+    @authenticated_users
+    def has_object_change_subscription_permission(self, request):
         return True
 
     def __str__(self):
@@ -324,7 +339,7 @@ class Notification(models.Model):
 
     @authenticated_users
     def has_object_read_permission(self, request):
-        return request.user == self.notification_user
+        return request.user == self.user
 
     @staticmethod
     @authenticated_users
@@ -333,4 +348,4 @@ class Notification(models.Model):
 
     @authenticated_users
     def has_object_update_permission(self, request):
-        return request.user == self.notification_user
+        return request.user == self.user
