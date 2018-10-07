@@ -20,6 +20,9 @@ from .shared_settings import *
 # SECURITY WARNING: keep the secret key used in production secret!
 with open('/etc/secret_key.txt') as f:
     SECRET_KEY = f.read().strip()
+
+with open('/etc/mail_password.txt') as f:
+    EMAIL_HOST_PASSWORD = f.read().strip()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -44,3 +47,9 @@ DATABASES = {
 MEDIA_ROOT='/server/live/media'
 STATIC_ROOT='/server/live/static'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = '127.0.0.1'
+EMAIL_HOST_USER = 'noreply@hobbyfiguras.moe'
+EMAIL_PORT = 587
