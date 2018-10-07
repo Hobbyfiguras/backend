@@ -53,6 +53,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = '127.0.0.1'
-EMAIL_HOST_USER = 'noreply@hobbyfiguras.moe'
+EMAIL_HOST_USER = 'Hobbyfiguras <noreply@hobbyfiguras.moe>'
 EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = 'noreply@hobbyfiguras.moe'
