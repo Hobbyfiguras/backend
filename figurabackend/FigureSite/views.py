@@ -40,9 +40,9 @@ class ReportViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   queryset = User.objects.all()
+  permission_classes = (DRYPermissions,)
   lookup_field = 'username'
 
-  permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
   def get_serializer_class(self):
     if self.request.user.is_staff or self.kwargs.get('pk') == 'current':
       return serializers.FullUserSerializer

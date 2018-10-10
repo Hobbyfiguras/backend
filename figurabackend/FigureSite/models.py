@@ -60,8 +60,28 @@ class User(AbstractUser):
     mfc_username = models.CharField(max_length=80, null=True, blank=True)
     twitter_username = models.CharField(max_length=80, null=True, blank=True)
     nsfw_enabled = models.BooleanField(default=False)
+
     def get_by_natural_key(self, username):
         return self.get(**{self.model.USERNAME_FIELD + '__iexact': username})
+
+    @staticmethod
+    def has_read_permission(request):
+        return True
+
+    def has_object_read_permission(self, request):
+        return True
+
+    @staticmethod
+    @authenticated_users
+    def has_update_permission(request):
+        return True
+
+    def has_object_update_permission(self, request):
+        print(self.id)
+        print(request.user.id)
+        if self.id == request.user.id:
+            return True
+
 class ForumCategory(OrderedModel):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=200, null=True, blank=True)
