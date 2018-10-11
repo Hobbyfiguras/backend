@@ -79,7 +79,7 @@ class User(AbstractUser):
     def has_object_update_permission(self, request):
         print(self.id)
         print(request.user.id)
-        if self.id == request.user.id:
+        if self == request.user:
             return True
 
 class ForumCategory(OrderedModel):
