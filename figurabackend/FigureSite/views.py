@@ -44,9 +44,25 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   lookup_field = 'username'
 
   def get_serializer_class(self):
+    if self.action == 'partial_update':
+      return serializers.UpdateUserSerializer
     if self.request.user.is_staff or self.kwargs.get('pk') == 'current':
       return serializers.FullUserSerializer
+
     return serializers.PublicUserSerializer
+
+  @action(methods=['post'], detail=True)
+  def ban_user(self, request, username=None):
+    user = self.get_object()
+    if request.data['post']:
+      post = Post.objects.get(pk=internal_id_from_model_and_external_id(Post, request.data['post']))
+      post.ban_reason = request.data['ban_reason']
+      post.banner = request.user
+      post.save()
+    user.ban_reason = request.data['ban_reason']
+    user.ban_expiry_date = request.data['ban_expiry_date']
+    user.save()
+    return Response(status=status.HTTP_200_OK)
 
   def get_object(self):
     pk = self.kwargs.get('username')
@@ -260,7 +276,7 @@ class PostViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveMod
     post = self.get_object()
     serializer = self.get_serializer(post, data=request.data, partial=True)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    serializer.save(modified=timezone.now(), modified_by=request.user)
     if getattr(post, '_prefetched_objects_cache', None):
       # If 'prefetch_related' has been applied to a queryset, we need to
       # forcibly invalidate the prefetch cache on the instance.

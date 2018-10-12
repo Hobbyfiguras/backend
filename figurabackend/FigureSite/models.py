@@ -10,10 +10,10 @@ from dry_rest_permissions.generics import allow_staff_or_superuser, authenticate
 from .utils import unique_slugify
 from django.db import IntegrityError
 from django.contrib.contenttypes.fields import GenericForeignKey
-import datetime
 from django.contrib.contenttypes.models import ContentType
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from django.apps import apps
+from django.utils import timezone
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -60,6 +60,10 @@ class User(AbstractUser):
     mfc_username = models.CharField(max_length=80, null=True, blank=True)
     twitter_username = models.CharField(max_length=80, null=True, blank=True)
     nsfw_enabled = models.BooleanField(default=False)
+    ban_reason = models.TextField(max_length=400, default='')
+    location = models.TextField(max_length=100, default='')
+    ban_expiry_date = models.DateTimeField(editable=False, null=True, blank=True)
+    bio = models.TextField(max_length=10000, default='', null=True, blank=True)
 
     def get_by_natural_key(self, username):
         return self.get(**{self.model.USERNAME_FIELD + '__iexact': username})
@@ -68,6 +72,15 @@ class User(AbstractUser):
     def has_read_permission(request):
         return True
 
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_ban_user_permission(request):
+        return False
+
+    @allow_staff_or_superuser
+    def has_object_ban_user_permission(request):
+        return False
+
     def has_object_read_permission(self, request):
         return True
 
@@ -75,6 +88,13 @@ class User(AbstractUser):
     @authenticated_users
     def has_update_permission(request):
         return True
+
+    @property
+    def is_banned(self):
+        if self.ban_expiry_date > timezone.now():
+            return True
+        else:
+            return False
 
     def has_object_update_permission(self, request):
         print(self.id)
@@ -132,8 +152,11 @@ class Forum(OrderedModel):
 
     @staticmethod
     @authenticated_users
-    def has_create_thread_permission(self):
-        return True
+    def has_create_thread_permission(request):
+        if not request.user.is_banned:
+            return True
+        else:
+            return False
 
     @authenticated_users
     def has_object_create_thread_permission(self, request):
@@ -178,8 +201,8 @@ class Thread(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.id:
-            self.created = datetime.datetime.now()
-            self.modified = datetime.datetime.now()
+            self.created = timezone.now()
+            self.modified = timezone.now()
         unique_slugify(self, self.title)
         return super(Thread, self).save(*args, **kwargs)
     @property
@@ -233,7 +256,8 @@ class Post(models.Model):
     deleted = models.BooleanField(default=False)
     delete_reason = models.TextField(default='')
     modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
-
+    ban_reason = models.TextField(default='')
+    banner = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='+')
     @property
     def page(self):
         return int(self.__class__.objects.filter(thread=self.thread).filter(
@@ -253,7 +277,7 @@ class Post(models.Model):
 
     @authenticated_users
     def has_object_write_permission(self, request):
-        if request.user.id == self.creator.id or request.user.is_staff:
+        if (request.user.id == self.creator.id and not request.user.is_banned) or request.user.is_staff:
             return True
         else:
             return False
@@ -261,7 +285,10 @@ class Post(models.Model):
     @staticmethod
     @authenticated_users
     def has_vote_permission(request):
-        return True
+        if not request.user.is_banned:
+            return True
+        else:
+            return False
 
     @authenticated_users
     def has_object_vote_permission(self, request):
@@ -285,8 +312,8 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
-            self.created = datetime.datetime.now()
-            self.modified = datetime.datetime.now()
+            self.created = timezone.now()
+            self.modified = timezone.now()
         return super(Post, self).save(*args, **kwargs)
 
     
@@ -317,7 +344,7 @@ class Report(models.Model):
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
-            self.created = datetime.datetime.now()
+            self.created = timezone.now()
         return super(Report, self).save(*args, **kwargs)
     class Meta:
         unique_together = ('creator', 'post')

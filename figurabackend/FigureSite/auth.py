@@ -90,6 +90,7 @@ class TokenAuthMiddleware:
                     auth = JWTAuthentication()
                     validated_token = auth.get_validated_token(token)
                     scope['user'] = auth.get_user(validated_token)
+                    print("user is %s" % scope['user'].username)
                     close_old_connections()
                 except InvalidToken:
                     scope['user'] = AnonymousUser()

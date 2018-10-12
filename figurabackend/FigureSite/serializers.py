@@ -37,13 +37,27 @@ class AvatarField(serializers.ImageField):
 class PublicUserSerializer(serializers.ModelSerializer):
     id = HashIdField(model=User)
     avatar = AvatarField()
+    post_count = serializers.SerializerMethodField()
+    thread_count = serializers.SerializerMethodField()
 
-
+    def get_post_count(self, obj):
+        return obj.posts.count()
+    def get_thread_count(self, obj):
+        return obj.threads.count()
     class Meta:
         model = User
         exclude = ('password', 'email', 'nsfw_enabled',)
 
-
+class UpdateUserSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=User)
+    avatar = AvatarField()
+    location = serializers.CharField(allow_null=True, allow_blank=True)
+    mfc_username = serializers.CharField(allow_null=True, allow_blank=True)
+    anilist_username = serializers.CharField(allow_null=True, allow_blank=True)
+    twitter_username = serializers.CharField(allow_null=True, allow_blank=True)
+    class Meta:
+        model = User
+        exclude = ('password', 'email', 'nsfw_enabled', 'ban_expiry_date', 'ban_reason',)
 
 class FullUserSerializer(PublicUserSerializer):
     id = HashIdField(model=User)
@@ -114,6 +128,8 @@ class PostSerializer(BasePostSerializer):
     thread = MinimalThreadSerializer()
     votes = serializers.SerializerMethodField()
     page = serializers.ReadOnlyField()
+    banner = MinimalUserSerializer()
+    modified_by = MinimalUserSerializer()
 
     def get_votes(self, obj):
         votes = []
