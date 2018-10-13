@@ -20,6 +20,11 @@ from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify
 from django.conf import settings
 from django.conf.urls.static import static
 
+from rest_auth.views import (
+    LoginView, LogoutView, UserDetailsView, PasswordChangeView,
+    PasswordResetView, PasswordResetConfirmView
+)
+
 from rest_framework_simplejwt.views import (
     TokenRefreshView
 )
@@ -31,6 +36,9 @@ urlpatterns = [
     path('api/mfc/', include('mfc.urls')),
     path('api/', include('FigureSite.urls')),
     path('api/auth/register/', include('rest_auth.registration.urls')),
+    path('api/auth/change_password/', PasswordChangeView.as_view()),
+    path('api/auth/password_reset/', PasswordResetView.as_view(), name='password_reset_confirm'),
+    path('api/auth/password_reset/verify/', PasswordResetConfirmView.as_view()),
     path('api/auth/login/', TokenObtainPairView.as_view()),
     path('api/auth/refresh/', TokenRefreshView.as_view())
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

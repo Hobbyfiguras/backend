@@ -57,7 +57,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     twitter_username = serializers.CharField(allow_null=True, allow_blank=True)
     class Meta:
         model = User
-        exclude = ('password', 'email', 'nsfw_enabled', 'ban_expiry_date', 'ban_reason',)
+        exclude = ('password', 'ban_expiry_date', 'ban_reason',)
 
 class FullUserSerializer(PublicUserSerializer):
     id = HashIdField(model=User)
