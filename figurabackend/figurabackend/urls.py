@@ -19,6 +19,8 @@ from django.urls import path, include
 from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify_jwt_token
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.csrf import csrf_exempt
+from FigureSite.auth import CustomPasswordResetView
 
 from rest_auth.views import (
     LoginView, LogoutView, UserDetailsView, PasswordChangeView,
@@ -36,9 +38,9 @@ urlpatterns = [
     path('api/mfc/', include('mfc.urls')),
     path('api/', include('FigureSite.urls')),
     path('api/auth/register/', include('rest_auth.registration.urls')),
-    path('api/auth/change_password/', PasswordChangeView.as_view()),
-    path('api/auth/password_reset/', PasswordResetView.as_view(), name='password_reset_confirm'),
-    path('api/auth/password_reset/verify/', PasswordResetConfirmView.as_view()),
+    path('api/auth/change_password/', csrf_exempt(PasswordChangeView.as_view())),
+    path('api/auth/password_reset/', CustomPasswordResetView.as_view(), name='password_reset_confirm'),
+    path('api/auth/password_reset/verify/', csrf_exempt(PasswordResetConfirmView.as_view())),
     path('api/auth/login/', TokenObtainPairView.as_view()),
     path('api/auth/refresh/', TokenRefreshView.as_view())
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

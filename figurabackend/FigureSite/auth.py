@@ -15,7 +15,10 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.exceptions import InvalidToken
 from django.db import close_old_connections
 from django.contrib.auth.models import AnonymousUser
-
+from rest_auth.views import PasswordResetView
+from rest_auth.serializers import PasswordResetSerializer
+from rest_framework.response import Response
+from rest_framework import status
 class CustomTokenObtainSerializer(TokenObtainSerializer):
     def validate(self, attrs):
         u = User.objects.filter(email__iexact=attrs[self.username_field]).first()
@@ -100,3 +103,9 @@ class TokenAuthMiddleware:
         return self.inner(scope)
 
 TokenAuthMiddlewareStack = lambda inner: TokenAuthMiddleware(AuthMiddlewareStack(inner))
+
+class CustomPasswordResetSerializer(PasswordResetSerializer):
+    def get_email_options(self):
+        return { 'html_email_template_name': 'registration/password_reset_email.html' }
+class CustomPasswordResetView(PasswordResetView):
+    serializer_class = CustomPasswordResetSerializer

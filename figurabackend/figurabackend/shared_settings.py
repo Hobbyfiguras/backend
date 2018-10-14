@@ -92,6 +92,7 @@ TEMPLATES = [
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
 WSGI_APPLICATION = 'figurabackend.wsgi.application'
+REST_SESSION_LOGIN = False
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
