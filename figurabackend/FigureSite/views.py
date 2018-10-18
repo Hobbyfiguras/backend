@@ -29,14 +29,16 @@ class ReportPagination(PageNumberPagination):
     page_size = 15
     max_page_size = 15
     page_size_query_param = 'page_size'
-    class Meta:
-      ordering = ['created']
 
 class ReportViewSet(viewsets.ModelViewSet):
   queryset = Report.objects.all()
   permission_classes = (DRYPermissions,)
   serializer_class = serializers.ReportSerializer
   pagination_class = ReportPagination
+
+  def filter_queryset(self, queryset):
+    queryset = super(ReportViewSet, self).filter_queryset(queryset)
+    return queryset.order_by('-created')
 
 class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   queryset = User.objects.all()

@@ -91,10 +91,10 @@ class User(AbstractUser):
 
     @property
     def is_banned(self):
-        if self.ban_expiry_date > timezone.now():
-            return True
-        else:
-            return False
+        if self.ban_expiry_date:
+            if self.ban_expiry_date > timezone.now():
+                return True
+        return False
 
     def has_object_update_permission(self, request):
         print(self.id)
@@ -281,6 +281,16 @@ class Post(models.Model):
             return True
         else:
             return False
+
+    @staticmethod
+    @authenticated_users
+    def has_object_report_permission():
+        return True
+
+    @authenticated_users
+    def has_object_report_permission(self, request):
+        if request.user.id != self.creator.id:
+            return True
 
     @staticmethod
     @authenticated_users
