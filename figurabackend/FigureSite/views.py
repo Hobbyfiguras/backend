@@ -64,7 +64,7 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
     user.ban_reason = request.data['ban_reason']
     user.ban_expiry_date = request.data['ban_expiry_date']
     user.save()
-    return Response(status=status.HTTP_200_OK)
+    return Response({}, status=status.HTTP_200_OK)
 
   def get_object(self):
     pk = self.kwargs.get('username')
