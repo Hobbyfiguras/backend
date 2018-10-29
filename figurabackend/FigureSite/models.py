@@ -60,9 +60,7 @@ class User(AbstractUser):
     mfc_username = models.CharField(max_length=80, null=True, blank=True)
     twitter_username = models.CharField(max_length=80, null=True, blank=True)
     nsfw_enabled = models.BooleanField(default=False)
-    ban_reason = models.TextField(max_length=400, default='')
     location = models.TextField(max_length=100, default='')
-    ban_expiry_date = models.DateTimeField(editable=False, null=True, blank=True)
     bio = models.TextField(max_length=10000, default='', null=True, blank=True)
 
     def get_by_natural_key(self, username):
@@ -231,7 +229,10 @@ class Thread(models.Model):
     @staticmethod    
     @authenticated_users
     def has_create_post_permission(request):
-        return True
+        if not request.user.is_banned:
+            return True
+        else:
+            return False
     @authenticated_users
     def has_object_create_post_permission(self, request):
         return True
@@ -256,8 +257,6 @@ class Post(models.Model):
     deleted = models.BooleanField(default=False)
     delete_reason = models.TextField(default='')
     modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
-    ban_reason = models.TextField(default='')
-    banner = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='+')
     @property
     def page(self):
         return int(self.__class__.objects.filter(thread=self.thread).filter(
@@ -382,6 +381,7 @@ class UserVote(models.Model):
 class Notification(models.Model):
     # notification_post_sub
     notification_type = models.CharField(max_length=200)
+    created = models.DateTimeField(editable=False)
     actor = models.ForeignKey(User, related_name='+', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
     object_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -406,3 +406,17 @@ class Notification(models.Model):
     @authenticated_users
     def has_object_update_permission(self, request):
         return request.user == self.user
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(Notification, self).save(*args, **kwargs)
+
+class BanReason(models.Model):
+    # notification_post_sub
+    post = models.ForeignKey(Post, related_name="bans", on_delete=models.CASCADE, null=True, blank=True)
+    ban_reason = models.TextField(max_length=1000)
+    banned_user = models.ForeignKey(User, related_name="bans", on_delete=models.CASCADE)
+    banner = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
+    ban_expiry_date = models.DateTimeField(editable=False)

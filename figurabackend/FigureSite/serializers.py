@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -34,19 +34,7 @@ class AvatarField(serializers.ImageField):
     def to_internal_value(self, obj):
         return super(serializers.ImageField, self).to_internal_value(obj)
 
-class PublicUserSerializer(serializers.ModelSerializer):
-    id = HashIdField(model=User)
-    avatar = AvatarField()
-    post_count = serializers.SerializerMethodField()
-    thread_count = serializers.SerializerMethodField()
 
-    def get_post_count(self, obj):
-        return obj.posts.count()
-    def get_thread_count(self, obj):
-        return obj.threads.count()
-    class Meta:
-        model = User
-        exclude = ('password', 'email', 'nsfw_enabled',)
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     id = HashIdField(model=User)
@@ -57,19 +45,50 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     twitter_username = serializers.CharField(allow_null=True, allow_blank=True)
     class Meta:
         model = User
-        exclude = ('password', 'ban_expiry_date', 'ban_reason',)
-
-class FullUserSerializer(PublicUserSerializer):
-    id = HashIdField(model=User)
-    class Meta:
-        model = User
         exclude = ('password',)
+
+
 
 class MinimalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username',)
 
+class MinimalPostSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=Post)
+    creator = MinimalUserSerializer()
+    content = None
+    class Meta:
+        model = Post
+        exclude = ('content',)
+
+class BanReasonSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=BanReason)
+    banner = MinimalUserSerializer()
+    banned_user = MinimalUserSerializer()
+    post = MinimalPostSerializer()
+    class Meta:
+        model = BanReason
+        fields = '__all__'
+
+class PublicUserSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=User)
+    avatar = AvatarField()
+    post_count = serializers.SerializerMethodField()
+    thread_count = serializers.SerializerMethodField()
+    bans = BanReasonSerializer(many=True)
+    def get_post_count(self, obj):
+        return obj.posts.count()
+    def get_thread_count(self, obj):
+        return obj.threads.count()
+    class Meta:
+        model = User
+        exclude = ('password', 'email', 'nsfw_enabled',)
+class FullUserSerializer(PublicUserSerializer):
+    id = HashIdField(model=User)
+    class Meta:
+        model = User
+        exclude = ('password',)
 class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
     id = HashIdField(model=Post, required=False)
     class Meta:
@@ -123,12 +142,14 @@ class VoteTypeSerializer(SerializerExtensionsMixin, serializers.ModelSerializer)
         model = VoteType
         fields = ('name', 'order', 'icon', 'id',)
 
+
+
 class PostSerializer(BasePostSerializer):
     creator = PublicUserSerializer()
     thread = MinimalThreadSerializer()
     votes = serializers.SerializerMethodField()
     page = serializers.ReadOnlyField()
-    banner = MinimalUserSerializer()
+    bans = BanReasonSerializer(many=True)
     modified_by = MinimalUserSerializer()
 
     def get_votes(self, obj):
@@ -153,13 +174,6 @@ class PostSerializer(BasePostSerializer):
         model = Post
         fields = '__all__'
 
-class MinimalPostSerializer(serializers.ModelSerializer):
-    id = HashIdField(model=Post)
-    creator = MinimalUserSerializer()
-    content = None
-    class Meta:
-        model = Post
-        exclude = ('content',)
 
 class UpdatePostSerializer(serializers.ModelSerializer):
     class Meta:

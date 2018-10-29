@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification
+from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -58,12 +58,9 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
     user = self.get_object()
     if request.data['post']:
       post = Post.objects.get(pk=internal_id_from_model_and_external_id(Post, request.data['post']))
-      post.ban_reason = request.data['ban_reason']
-      post.banner = request.user
-      post.save()
-    user.ban_reason = request.data['ban_reason']
-    user.ban_expiry_date = request.data['ban_expiry_date']
-    user.save()
+      ban_reason = BanReason(post=post, ban_reason=request.data['ban_reason'], banner=request.user, banned_user=post.creator, ban_expiry_date=request.data['ban_expiry_date'])
+      ban_reason.save()
+      return Response(serializers.BanReasonSerializer(ban_reason).data, status=status.HTTP_200_OK)
     return Response({}, status=status.HTTP_200_OK)
 
   def get_object(self):
@@ -212,9 +209,11 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveM
       thread.save()
 
       for subscriber in thread.subscribers.all():
-        notification = Notification.objects.create(notification_type="notification_post_sub", user = subscriber, actor=request.user, notification_object=serializer.instance)
-        notification.save()
-        send_notification(request, notification)
+        # Users shouldn't get notifications about themselves
+        if request.user.id != subscriber.id:
+          notification = Notification.objects.create(notification_type="notification_post_sub", user = subscriber, actor=request.user, notification_object=serializer.instance)
+          notification.save()
+          send_notification(request, notification)
 
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
@@ -237,6 +236,10 @@ class NotificationsViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.
   permission_classes = (DRYPermissions,)
   serializer_class = serializers.NotificationSerializer
   pagination_class = NotificationsPagination
+
+  def filter_queryset(self, queryset):
+    queryset = super(NotificationsViewSet, self).filter_queryset(queryset)
+    return queryset.order_by('-created')
 
   def get_queryset(self):
     if self.action == 'unread':
