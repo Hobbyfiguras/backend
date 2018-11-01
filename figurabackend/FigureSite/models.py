@@ -89,8 +89,8 @@ class User(AbstractUser):
 
     @property
     def is_banned(self):
-        if self.ban_expiry_date:
-            if self.ban_expiry_date > timezone.now():
+        if self.bans.count() > 0:
+            if self.bans.all()[self.bans.count - 1].ban_expiry_date > timezone.now():
                 return True
         return False
 
