@@ -35,11 +35,8 @@ from rest_framework_simplejwt.views import (
 )
 
 from FigureSite.auth import TokenObtainPairView
-class CSRFExemptMixin(object):
-   @method_decorator(csrf_exempt)
-   def dispatch(self, *args, **kwargs):
-       return super(CSRFExemptMixin, self).dispatch(*args, **kwargs)
 
+@method_decorator(csrf_exempt, name='post')
 class VerifyEmailViewNoCSRF(CSRFExemptMixin, VerifyEmailView):
     pass
 
