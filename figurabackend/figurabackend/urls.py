@@ -21,7 +21,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.decorators.csrf import csrf_exempt
 from FigureSite.auth import CustomPasswordResetView
-
+from rest_auth.registration.views import RegisterView, VerifyEmailView
 from rest_auth.views import (
     LoginView, LogoutView, UserDetailsView, PasswordChangeView,
     PasswordResetView, PasswordResetConfirmView
@@ -37,7 +37,8 @@ urlpatterns = [
     path('djadmin/', admin.site.urls),
     path('api/mfc/', include('mfc.urls')),
     path('api/', include('FigureSite.urls')),
-    path('api/auth/register/', include('rest_auth.registration.urls')),
+    path('api/auth/register/', csrf_exempt(RegisterView.as_view())),
+    path('api/auth/register/verify-email/', csrf_exempt(VerifyEmailView.as_view()))
     path('api/auth/change_password/', csrf_exempt(PasswordChangeView.as_view())),
     path('api/auth/password_reset/', CustomPasswordResetView.as_view(), name='password_reset_confirm'),
     path('api/auth/password_reset/verify/', csrf_exempt(PasswordResetConfirmView.as_view())),
