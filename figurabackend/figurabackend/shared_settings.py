@@ -87,7 +87,6 @@ TEMPLATES = [
     },
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
 WSGI_APPLICATION = 'figurabackend.wsgi.application'
 REST_SESSION_LOGIN = False
