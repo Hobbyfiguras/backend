@@ -22,10 +22,7 @@ SECRET_KEY = 'cr+2488qp=f^jb8r13j@wwsq2mxyqmh#zi_y603=-)zjahxvd2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-INSTALLED_APPS = INSTALLED_APPS + ['corsheaders']
-
-MIDDLEWARE = MIDDLEWARE + ['django.middleware.csrf.CsrfViewMiddleware']
+CORS_ORIGIN_ALLOW_ALL = True
 
 ALLOWED_HOSTS = ['192.168.1.132', '127.0.0.1']
 
