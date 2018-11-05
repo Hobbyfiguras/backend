@@ -1,20 +1,18 @@
 from django.utils import timezone
 from haystack import indexes
-from .models import Post
+from .models import Post, Thread
 
-class PostIndex(indexes.SearchIndex, indexes.Indexable):
+class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
 
-    text = indexes.CharField(document=True, model_attr='content')
+    text = indexes.CharField(document=True, model_attr='title')
     username = indexes.CharField(model_attr='creator__username')
-    thread_slug = indexes.CharField(model_attr='thread__slug')
-    page = indexes.IntegerField(model_attr='page')
-    hid = indexes.CharField(model_attr='hid')
-    thread_title = indexes.CharField(model_attr='thread__title')
-    thread_id = indexes.CharField(model_attr='thread__hid')
-    thread_forum = indexes.CharField(model_attr='thread__forum__slug')
+    slug = indexes.CharField(model_attr='slug')
+    id = indexes.CharField(model_attr='hid')
+    forum = indexes.CharField(model_attr='forum__slug')
+
 
     def get_model(self):
-        return Post
+        return Thread
 
     def index_queryset(self, using=None):
         return self.get_model().objects.filter(

@@ -21,33 +21,36 @@ from rest_framework.views import APIView
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id, internal_id_from_model_and_external_id
 from dry_rest_permissions.generics import DRYPermissions
 from .notifications import send_notification
-from .search_indexes import PostIndex
+from .search_indexes import ThreadIndex
 
 from drf_haystack.serializers import HaystackSerializer
 from drf_haystack.viewsets import HaystackViewSet
 
+class ThreadPagination(PageNumberPagination):
+    page_size = 20
+    max_page_size = 20
+    page_size_query_param = 'page_size'
 
-class PostSerializer(HaystackSerializer):
+class ThreadSerializer(HaystackSerializer):
 
     class Meta:
         # The `index_classes` attribute is a list of which search indexes
         # we want to include in the search.
-        index_classes = [PostIndex]
+        index_classes = [ThreadIndex]
 
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "text", "username", "thread_slug", "thread_title", "page", "hid", "thread_id", "thread_forum" ]
+        fields = [ "title", "username", "slug", "id", "forum" ]
 
-class PostSearchView(HaystackViewSet):
+class ThreadSearchView(HaystackViewSet):
 
     # `index_models` is an optional list of which models you would like to include
     # in the search result. You might have several models indexed, and this provides
     # a way to filter out those of no interest for this particular view.
     # (Translates to `SearchQuerySet().models(*index_models)` behind the scenes.
-
-    serializer_class = PostSerializer
-
+    pagination_class = ThreadPagination
+    serializer_class = ThreadSerializer
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10
@@ -191,11 +194,6 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
         return Response(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
     else:
       return Response(thread_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class ThreadPagination(PageNumberPagination):
-    page_size = 20
-    max_page_size = 20
-    page_size_query_param = 'page_size'
 
 class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
