@@ -36,16 +36,12 @@ from rest_framework_simplejwt.views import (
 
 from FigureSite.auth import TokenObtainPairView
 
-@method_decorator(csrf_exempt, name='post')
-class VerifyEmailViewNoCSRF(CSRFExemptMixin, VerifyEmailView):
-    pass
-
 urlpatterns = [
     path('djadmin/', admin.site.urls),
     path('api/mfc/', include('mfc.urls')),
     path('api/', include('FigureSite.urls')),
     path('api/auth/register/', RegisterView.as_view()),
-    path('api/auth/register/verify-email/', VerifyEmailViewNoCSRF.as_view()),
+    path('api/auth/register/verify-email/', VerifyEmailView.as_view()),
     path('api/auth/change_password/', csrf_exempt(PasswordChangeView.as_view())),
     path('api/auth/password_reset/', CustomPasswordResetView.as_view(), name='password_reset_confirm'),
     path('api/auth/password_reset/verify/', csrf_exempt(PasswordResetConfirmView.as_view())),
