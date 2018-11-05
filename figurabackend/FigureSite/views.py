@@ -21,6 +21,33 @@ from rest_framework.views import APIView
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id, internal_id_from_model_and_external_id
 from dry_rest_permissions.generics import DRYPermissions
 from .notifications import send_notification
+from .search_indexes import PostIndex
+
+from drf_haystack.serializers import HaystackSerializer
+from drf_haystack.viewsets import HaystackViewSet
+
+
+class PostSerializer(HaystackSerializer):
+
+    class Meta:
+        # The `index_classes` attribute is a list of which search indexes
+        # we want to include in the search.
+        index_classes = [PostIndex]
+
+        # The `fields` contains all the fields we want to include.
+        # NOTE: Make sure you don't confuse these with model attributes. These
+        # fields belong to the search index!
+        fields = [ "text", "username", "thread_slug", "thread_title", "page", "hid", "thread_id", "thread_forum" ]
+
+class PostSearchView(HaystackViewSet):
+
+    # `index_models` is an optional list of which models you would like to include
+    # in the search result. You might have several models indexed, and this provides
+    # a way to filter out those of no interest for this particular view.
+    # (Translates to `SearchQuerySet().models(*index_models)` behind the scenes.
+
+    serializer_class = PostSerializer
+
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10

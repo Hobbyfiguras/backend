@@ -190,6 +190,10 @@ class Thread(models.Model):
     is_sticky = models.BooleanField(default=False)
     subscribers = models.ManyToManyField(User, related_name="subscribed_threads")
 
+    @property
+    def hid(self):
+        return external_id_from_model_and_internal_id(Thread, self.id)
+
     def change_user_subscription(self, user, subscribed):
         if subscribed:
             self.subscribers.add(user)
@@ -257,6 +261,9 @@ class Post(models.Model):
     deleted = models.BooleanField(default=False)
     delete_reason = models.TextField(default='')
     modified_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    @property
+    def hid(self):
+        return external_id_from_model_and_internal_id(Post, self.id)
     @property
     def page(self):
         return int(self.__class__.objects.filter(thread=self.thread).filter(
