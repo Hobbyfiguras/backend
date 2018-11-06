@@ -51,6 +51,7 @@ class ThreadSearchView(HaystackViewSet):
     # (Translates to `SearchQuerySet().models(*index_models)` behind the scenes.
     pagination_class = ThreadPagination
     serializer_class = ThreadSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class UserPostPagination(PageNumberPagination):
     page_size = 10
