@@ -41,7 +41,7 @@ class ThreadSerializer(HaystackSerializer):
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "title", "username", "slug", "id", "forum" ]
+        fields = [ "text", "username", "slug", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator" ]
 
 class ThreadSearchView(HaystackViewSet):
 
@@ -186,6 +186,7 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
       post_serializer = serializers.CreatePostSerializer(data=post_data)
       if post_serializer.is_valid():
         post_serializer.save()
+        thread.save()
         data = thread_serializer.data
         data['slug'] = thread.slug
         data['id'] = external_id_from_model_and_internal_id(Thread, thread.id)

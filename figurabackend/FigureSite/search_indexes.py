@@ -1,16 +1,20 @@
 from django.utils import timezone
 from haystack import indexes
 from .models import Post, Thread
+from haystack import signals
+from haystack.exceptions import NotHandled
 
 class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
 
     text = indexes.CharField(document=True, model_attr='title')
     username = indexes.CharField(model_attr='creator__username')
     slug = indexes.CharField(model_attr='slug')
-    id = indexes.CharField(model_attr='hid')
+    thread_id = indexes.CharField(model_attr='hid')
     forum = indexes.CharField(model_attr='forum__slug')
-
-
+    modified = indexes.DateTimeField(model_attr='modified')
+    created = indexes.DateTimeField(model_attr='created')
+    post_count = indexes.IntegerField(model_attr='post_count')
+    last_post_creator = indexes.CharField(model_attr='last_post__creator__username')
     def get_model(self):
         return Thread
 

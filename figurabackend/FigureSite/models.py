@@ -194,6 +194,10 @@ class Thread(models.Model):
     def hid(self):
         return external_id_from_model_and_internal_id(Thread, self.id)
 
+    @property
+    def post_count(self):
+        return self.posts.count()
+
     def change_user_subscription(self, user, subscribed):
         if subscribed:
             self.subscribers.add(user)
