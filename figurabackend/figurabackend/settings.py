@@ -31,6 +31,13 @@ HASHID_FIELD_SALT = "#jnz3ol^8a@bfb)05*&zspnc-+$+_qqi^03+sjz1s7ql8z*lm^"
 EMAIL_BACKEND = 'django_filebased_email_backend_ng.backend.EmailBackend'
 EMAIL_FILE_PATH = '/mnt/c/Users/EIREXE/figuritas/tmpmail' # change this to a proper location
 
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+    },
+}
+
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
