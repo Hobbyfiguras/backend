@@ -196,7 +196,7 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
     else:
       return Response(thread_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ThreadViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
   permission_classes = (DRYPermissions,)
   serializer_class = serializers.ThreadSerializer

@@ -205,6 +205,21 @@ class Thread(models.Model):
             self.subscribers.remove(user)
         self.save()
 
+    @staticmethod
+    @authenticated_users
+    def has_update_permission(request):
+        if not request.user.is_banned:
+            return True
+        else:
+            return False
+
+    @allow_staff_or_superuser
+    def has_object_update_permission(self, request):
+        if self.creator == request.user:
+            return True
+        else:
+            return False
+
     def save(self, *args, **kwargs):
         if not self.id:
             self.created = timezone.now()
