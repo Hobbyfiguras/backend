@@ -33,6 +33,13 @@ ALLOWED_HOSTS = ['127.0.0.1', 'hobbyfiguras.moe']
 with open('/etc/hashid_secret.txt') as f:
     HASHID_FIELD_SALT = f.read().strip()
 
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': '/server/whoosh_index',
+    },
+}
+
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
