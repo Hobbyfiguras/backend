@@ -441,8 +441,15 @@ class Notification(models.Model):
 
 class BanReason(models.Model):
     # notification_post_sub
+    created = models.DateTimeField(editable=False)
     post = models.ForeignKey(Post, related_name="bans", on_delete=models.CASCADE, null=True, blank=True)
     ban_reason = models.TextField(max_length=1000)
     banned_user = models.ForeignKey(User, related_name="bans", on_delete=models.CASCADE)
     banner = models.ForeignKey(User, related_name="+", on_delete=models.CASCADE)
     ban_expiry_date = models.DateTimeField(editable=False)
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(BanReason, self).save(*args, **kwargs)

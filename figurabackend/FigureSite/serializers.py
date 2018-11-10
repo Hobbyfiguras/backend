@@ -76,7 +76,12 @@ class PublicUserSerializer(serializers.ModelSerializer):
     avatar = AvatarField()
     post_count = serializers.SerializerMethodField()
     thread_count = serializers.SerializerMethodField()
-    bans = BanReasonSerializer(many=True)
+    bans = serializers.SerializerMethodField() 
+
+    def get_bans(self, obj):
+        bans = obj.bans.all().order_by('-created')
+        return BanReasonSerializer(bans,many=True)
+
     def get_post_count(self, obj):
         return obj.posts.count()
     def get_thread_count(self, obj):
