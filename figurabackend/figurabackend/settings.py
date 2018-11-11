@@ -31,15 +31,7 @@ HASHID_FIELD_SALT = "#jnz3ol^8a@bfb)05*&zspnc-+$+_qqi^03+sjz1s7ql8z*lm^"
 EMAIL_BACKEND = 'django_filebased_email_backend_ng.backend.EmailBackend'
 EMAIL_FILE_PATH = '/mnt/c/Users/EIREXE/figuritas/tmpmail' # change this to a proper location
 
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://127.0.0.1:8983/solr/hobbyfiguras',                 # Assuming you created a core named 'tester' as described in installing search engines.
-        'ADMIN_URL': 'http://127.0.0.1:8983/solr/admin/cores'
-        # ...or for multicore...
-        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
-    },
-}
+
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -49,6 +41,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
+}
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+    },
 }
 
 MEDIA_ROOT='/mnt/c/Users/EIREXE/figuritas/backend/media'

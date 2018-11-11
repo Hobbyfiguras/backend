@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from django.apps import apps
 from django.utils import timezone
+
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)

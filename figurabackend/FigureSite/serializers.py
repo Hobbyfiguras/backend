@@ -11,9 +11,7 @@ from rest_framework_serializer_extensions.utils import external_id_from_model_an
 DEFAULT_AVATARS = [
         '/avatars/avatar_1.png',
         '/avatars/avatar_2.png',
-        '/avatars/avatar_3.png',
-        '/avatars/avatar_4.png',
-        '/avatars/avatar_5.png'
+        '/avatars/avatar_3.png'
     ]
 
 class AvatarField(serializers.ImageField):
@@ -192,7 +190,7 @@ class MinimalPostSerializerContent(BasePostSerializer):
 
 class ThreadSerializer(serializers.ModelSerializer):
     id = HashIdField(model=Thread)
-    creator = MinimalUserSerializer()
+    creator = PublicUserSerializer()
     forum = BasicForumSerializer()
     post_count = serializers.SerializerMethodField()
     last_post = MinimalPostSerializer()
