@@ -268,7 +268,7 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
       posts = self.get_paginated_response(serializer.data).data
     else:
       posts = serializers.PostSerializer(thread.posts, many=True, context={'request': request})
-    return Response({**{'posts': posts, 'subscribed': request.user in thread.subscribers.all()}, **serializers.ThreadSerializer(thread).data})
+    return Response({**{'posts': posts, 'subscribed': request.user in thread.subscribers.all()}, **serializers.ThreadSerializer(thread, context={'request': request}).data})
 
   @action(detail=True, methods=['post'])
   def change_subscription(self, request, pk=None):
