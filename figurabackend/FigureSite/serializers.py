@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -202,6 +202,23 @@ class ThreadSerializer(serializers.ModelSerializer):
         model = Thread
         exclude = ('subscribers',)
 
+class PrivateMessageSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=PrivateMessage)
+    creator = PublicUserSerializer()
+    receiver = PublicUserSerializer()
+
+    class Meta:
+        model = PrivateMessage
+        fields = '__all__'
+
+class CreatePrivateMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PrivateMessage
+        fields = ('subject', 'content', 'creator', 'receiver',)
+class UpdatePrivateMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PrivateMessage
+        fields = ('read',)
 class ForumCategorySerializer(serializers.ModelSerializer):
     forums = BasicForumSerializer(many=True, read_only=True)
     

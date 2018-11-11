@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason
+from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason, PrivateMessage
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -22,9 +22,14 @@ from rest_framework_serializer_extensions.utils import external_id_from_model_an
 from dry_rest_permissions.generics import DRYPermissions
 from .notifications import send_notification
 from .search_indexes import ThreadIndex
-
+from django.db.models import Q
 from drf_haystack.serializers import HaystackSerializer
 from drf_haystack.viewsets import HaystackViewSet
+
+class PrivateMessagePagination(PageNumberPagination):
+    page_size = 20
+    max_page_size = 20
+    page_size_query_param = 'page_size'
 
 class ThreadPagination(PageNumberPagination):
     page_size = 20
@@ -70,6 +75,32 @@ class ReportViewSet(viewsets.ModelViewSet):
   def filter_queryset(self, queryset):
     queryset = super(ReportViewSet, self).filter_queryset(queryset)
     return queryset.order_by('-created')
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+class PrivateMessageViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+  queryset = PrivateMessage.objects.all()
+  permission_classes = (DRYPermissions,)
+  pagination_class = PrivateMessagePagination
+  serializer_class = serializers.PrivateMessageSerializer
+
+  def get_serializer_class(self):
+    if self.action == 'partial_update' or self.action == 'update':
+      return serializers.UpdatePrivateMessageSerializer
+    return serializers.PrivateMessageSerializer
+
+  def get_queryset(self):
+    read = self.request.query_params.get('read', None)
+    print(read)
+    if read:
+      return PrivateMessage.objects.filter(receiver=self.request.user, read=str2bool(read))
+    elif self.action == 'sent':
+      return PrivateMessage.objects.filter(creator=self.request.user)
+    else:
+      return PrivateMessage.objects.filter(receiver=self.request.user)
+
+  def filter_queryset(self, queryset):
+    queryset = super(PrivateMessageViewSet, self).filter_queryset(queryset)
+    return queryset.order_by('-created')
 
 class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   queryset = User.objects.all()
@@ -97,7 +128,19 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
       ban_reason = BanReason(post=post, ban_reason=request.data['ban_reason'], banner=request.user, banned_user=post.creator, ban_expiry_date=request.data['ban_expiry_date'])
       ban_reason.save()
       return Response(serializers.BanReasonSerializer(ban_reason).data, status=status.HTTP_200_OK)
-    return Response({}, status=status.HTTP_200_OK)
+    return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
+  @action(methods=['post'], detail=True)
+  def send_message(self, request, username=None):
+    user = self.get_object()
+    request.data['creator'] = request.user.id
+    request.data['receiver'] = user.id
+    serializer = serializers.CreatePrivateMessageSerializer(data=request.data)
+    if serializer.is_valid():
+      message = serializer.save()
+      return Response(serializers.PrivateMessageSerializer(message, context={'request': request}).data, status=status.HTTP_200_OK)
+    else: 
+      return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
   def get_object(self):
     pk = self.kwargs.get('username')
@@ -127,6 +170,9 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
     else:
       threads = serializers.ThreadSerializer(user.threads.all().order_by('-created'), many=True, context={'request': request})
     return Response(threads.data)
+
+
+
 class ForumCategoryViewSet(viewsets.ModelViewSet):
   queryset = ForumCategory.objects.all()
   permission_classes = (DRYPermissions,)

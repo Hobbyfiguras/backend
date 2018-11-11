@@ -80,6 +80,15 @@ class User(AbstractUser):
     def has_object_ban_user_permission(request):
         return False
 
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_send_message_permission(request):
+        return True
+
+    @allow_staff_or_superuser
+    def has_object_send_message_permission(self, request):
+        return True
+
     def has_object_read_permission(self, request):
         return True
 
@@ -193,6 +202,44 @@ class Forum(OrderedModel):
         if not self.id:
             unique_slugify(self, self.name)
         super(Forum, self).save(*args,**kwargs)    
+
+class PrivateMessage(models.Model):
+    creator = models.ForeignKey(User, related_name="messages_sent", on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name="messages_received", on_delete=models.CASCADE)
+    subject = models.TextField(max_length=500)
+    content = models.TextField(max_length=20000)
+    created = models.DateTimeField(editable=False)
+    read = models.BooleanField(default=False)
+
+    @staticmethod
+    @authenticated_users
+    def has_read_permission(request):
+        return True
+
+    @allow_staff_or_superuser
+    def has_object_read_permission(self, request):
+        if self.creator == request.user or self.receiver == request.user:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    @authenticated_users
+    def has_write_permission(request):
+        return True
+
+    @allow_staff_or_superuser
+    def has_object_write_permission(self, request):
+        if self.creator == request.user or self.receiver == request.user:
+            return True
+        else:
+            return False
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(PrivateMessage, self).save(*args, **kwargs)
 
 class Thread(models.Model):
     title = models.CharField(max_length=100)

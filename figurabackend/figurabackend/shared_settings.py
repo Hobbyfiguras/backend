@@ -76,6 +76,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'figurabackend.urls'
 
+ACCOUNT_USERNAME_VALIDATORS = 'FigureSite.validators.validators'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

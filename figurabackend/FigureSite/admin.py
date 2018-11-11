@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Forum, ForumCategory, Thread, Post, VoteType, UserVote
+from .models import User, Forum, ForumCategory, Thread, Post, VoteType, UserVote, PrivateMessage
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from ordered_model.admin import OrderedModelAdmin
 
@@ -29,3 +29,4 @@ admin.site.register(Thread, admin.ModelAdmin)
 admin.site.register(Post, admin.ModelAdmin)
 admin.site.register(VoteType, admin.ModelAdmin)
 admin.site.register(UserVote, admin.ModelAdmin)
+admin.site.register(PrivateMessage, admin.ModelAdmin)
