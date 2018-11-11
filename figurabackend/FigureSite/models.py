@@ -87,6 +87,20 @@ class User(AbstractUser):
     def has_update_permission(request):
         return True
 
+    @staticmethod
+    @authenticated_users
+    def has_write_permission(request):
+        return True
+        
+    @allow_staff_or_superuser
+    def has_object_write_permission(self, request):
+        print(self.id)
+        print(request.user.id)
+        if self == request.user:
+            return True
+        else:
+            return False
+
     @property
     def is_banned(self):
         if self.bans.count() > 0:

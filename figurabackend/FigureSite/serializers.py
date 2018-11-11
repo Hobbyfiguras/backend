@@ -80,7 +80,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
 
     def get_bans(self, obj):
         bans = obj.bans.all().order_by('-created')
-        return BanReasonSerializer(bans,many=True)
+        return BanReasonSerializer(bans, many=True).data
 
     def get_post_count(self, obj):
         return obj.posts.count()

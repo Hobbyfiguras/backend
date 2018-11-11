@@ -76,6 +76,11 @@ class UserViewSet(viewsets.ModelViewSet, EagerLoadingMixin):
   permission_classes = (DRYPermissions,)
   lookup_field = 'username'
 
+  def retrieve(self, request, username=None):
+    if self.request.user.is_anonymous:
+      return Response({}, status=status.HTTP_403_FORBIDDEN)
+    else:
+      return super(UserViewSet, self).retrieve(request, username)
   def get_serializer_class(self):
     if self.action == 'partial_update':
       return serializers.UpdateUserSerializer
