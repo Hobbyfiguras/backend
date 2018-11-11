@@ -158,7 +158,7 @@ class ForumCategory(OrderedModel):
 
 class Forum(OrderedModel):
     name = models.CharField(max_length=100)
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=500)
     category = models.ForeignKey(ForumCategory, related_name="forums", on_delete=models.CASCADE)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     only_staff_can_post = models.BooleanField(default=False)
