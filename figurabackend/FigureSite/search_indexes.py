@@ -4,6 +4,8 @@ from .models import Post, Thread
 from haystack import signals
 from haystack.exceptions import NotHandled
 
+from .search_fields import AvatarField
+
 class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
 
     text = indexes.CharField(document=True, model_attr='title')
@@ -15,6 +17,7 @@ class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
     created = indexes.DateTimeField(model_attr='created')
     post_count = indexes.IntegerField(model_attr='post_count')
     last_post_creator = indexes.CharField(model_attr='last_post__creator__username')
+    avatar = AvatarField(model_attr='creator__avatar')
     def get_model(self):
         return Thread
 

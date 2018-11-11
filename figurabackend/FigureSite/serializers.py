@@ -8,11 +8,7 @@ from rest_framework_serializer_extensions.fields import HashIdField
 from rest_framework_serializer_extensions.serializers import SerializerExtensionsMixin
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
-DEFAULT_AVATARS = [
-        '/avatars/avatar_1.png',
-        '/avatars/avatar_2.png',
-        '/avatars/avatar_3.png'
-    ]
+from .avatars import get_avatar
 
 class AvatarField(serializers.ImageField):
 
@@ -26,8 +22,7 @@ class AvatarField(serializers.ImageField):
         if obj.avatar:
             return super(AvatarField, self).to_representation(obj.avatar)
         else:
-            random.seed(obj.id)
-            return self.context['request'].build_absolute_uri(static(random.choice(DEFAULT_AVATARS)))
+            return self.context['request'].build_absolute_uri(get_avatar(obj))
 
     def to_internal_value(self, obj):
         return super(serializers.ImageField, self).to_internal_value(obj)

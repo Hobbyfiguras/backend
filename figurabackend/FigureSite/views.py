@@ -46,7 +46,7 @@ class ThreadSerializer(HaystackSerializer):
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "text", "username", "slug", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator" ]
+        fields = [ "text", "username", "slug", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator", "avatar" ]
 
 class ThreadSearchView(HaystackViewSet):
 
