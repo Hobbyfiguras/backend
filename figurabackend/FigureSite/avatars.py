@@ -8,8 +8,8 @@ DEFAULT_AVATARS = [
     ]
 
 def get_avatar(user):
-    if obj.avatar:
-        return static(obj.avatar)
+    if user.avatar:
+        return static(user.avatar)
     else:
         random.seed(user.id)
         return static(random.choice(DEFAULT_AVATARS))
