@@ -9,7 +9,7 @@ DEFAULT_AVATARS = [
 
 def get_avatar(user):
     if user.avatar:
-        return str(user.avatar.url)
+        return user.avatar.url
     else:
         random.seed(user.id)
         return static(random.choice(DEFAULT_AVATARS))

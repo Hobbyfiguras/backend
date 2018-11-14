@@ -16,8 +16,8 @@ class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
     modified = indexes.DateTimeField(model_attr='modified')
     created = indexes.DateTimeField(model_attr='created')
     post_count = indexes.IntegerField(model_attr='post_count')
+    nsfw = indexes.BooleanField(model_attr='nsfw')
     last_post_creator = indexes.CharField(model_attr='last_post__creator__username')
-    avatar = AvatarField(model_attr='creator__avatar')
     def get_model(self):
         return Thread
 
@@ -30,5 +30,6 @@ class UserIndex(indexes.SearchIndex, indexes.Indexable):
 
     text = indexes.CharField(document=True, model_attr='username')
     avatar = UserAvatarField(model_attr='avatar')
+    date_joined = indexes.DateTimeField(model_attr='date_joined')
     def get_model(self):
         return User

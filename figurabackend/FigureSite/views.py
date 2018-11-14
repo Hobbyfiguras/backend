@@ -50,7 +50,7 @@ class ThreadSerializer(HaystackSerializer):
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "text", "username", "slug", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator" ]
+        fields = [ "text", "username", "slug", "nsfw", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator" ]
 
 class UserSerializer(HaystackSerializer):
     class Meta:
@@ -61,7 +61,7 @@ class UserSerializer(HaystackSerializer):
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "avatar", "text" ]
+        fields = [ "avatar", "text", "date_joined" ]
 
 class UserSearchView(HaystackViewSet):
     index_models = [User]
@@ -75,6 +75,7 @@ class UserSearchView(HaystackViewSet):
 
     def finalize_response(self, request, response, *args, **kwargs):
       response = super(UserSearchView, self).finalize_response(request, response, *args, **kwargs)
+      print(response.data)
       for i, user in enumerate(response.data['results']):
         response.data['results'][i]['avatar'] = request.build_absolute_uri(response.data['results'][i]['avatar'])
       return response
