@@ -16,7 +16,7 @@ router.register(r'private_messages', views.PrivateMessageViewSet)
 router.register(r'notifications', views.NotificationsViewSet, base_name='notifications')
 #router.register(r'search/posts', views.PostSearchView, base_name="post-search")
 router.register(r'search/threads', views.ThreadSearchView, base_name="thread-search")
-
+router.register(r'search/users', views.UserSearchView, base_name="user-search")
 urlpatterns = [
     path('', include(router.urls)),
     path('settings/', views.ForumSettings.as_view())

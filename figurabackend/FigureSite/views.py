@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id, internal_id_from_model_and_external_id
 from dry_rest_permissions.generics import DRYPermissions
 from .notifications import send_notification
-from .search_indexes import ThreadIndex
+from .search_indexes import ThreadIndex, UserIndex
 from django.db.models import Q
 from drf_haystack.serializers import HaystackSerializer
 from drf_haystack.viewsets import HaystackViewSet
@@ -36,8 +36,12 @@ class ThreadPagination(PageNumberPagination):
     max_page_size = 20
     page_size_query_param = 'page_size'
 
-class ThreadSerializer(HaystackSerializer):
+class UserPagination(PageNumberPagination):
+    page_size = 20
+    max_page_size = 20
+    page_size_query_param = 'page_size'
 
+class ThreadSerializer(HaystackSerializer):
     class Meta:
         # The `index_classes` attribute is a list of which search indexes
         # we want to include in the search.
@@ -46,10 +50,37 @@ class ThreadSerializer(HaystackSerializer):
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "text", "username", "slug", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator", "avatar" ]
+        fields = [ "text", "username", "slug", "thread_id", "forum", "modified", "created", "post_count", "last_post_creator" ]
+
+class UserSerializer(HaystackSerializer):
+    class Meta:
+        # The `index_classes` attribute is a list of which search indexes
+        # we want to include in the search.
+        index_classes = [UserIndex]
+
+        # The `fields` contains all the fields we want to include.
+        # NOTE: Make sure you don't confuse these with model attributes. These
+        # fields belong to the search index!
+        fields = [ "avatar", "text" ]
+
+class UserSearchView(HaystackViewSet):
+    index_models = [User]
+    # `index_models` is an optional list of which models you would like to include
+    # in the search result. You might have several models indexed, and this provides
+    # a way to filter out those of no interest for this particular view.
+    # (Translates to `SearchQuerySet().models(*index_models)` behind the scenes.
+    pagination_class = UserPagination
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def finalize_response(self, request, response, *args, **kwargs):
+      response = super(UserSearchView, self).finalize_response(request, response, *args, **kwargs)
+      for i, user in enumerate(response.data['results']):
+        response.data['results'][i]['avatar'] = request.build_absolute_uri(response.data['results'][i]['avatar'])
+      return response
 
 class ThreadSearchView(HaystackViewSet):
-
+    index_models = [Thread]
     # `index_models` is an optional list of which models you would like to include
     # in the search result. You might have several models indexed, and this provides
     # a way to filter out those of no interest for this particular view.
@@ -57,7 +88,6 @@ class ThreadSearchView(HaystackViewSet):
     pagination_class = ThreadPagination
     serializer_class = ThreadSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
 class UserPostPagination(PageNumberPagination):
     page_size = 10
 
@@ -179,6 +209,10 @@ class ForumCategoryViewSet(viewsets.ModelViewSet):
   serializer_class = serializers.ForumCategorySerializer
   lookup_field = 'slug'
 
+  def filter_queryset(self, queryset):
+    queryset = super(ForumCategoryViewSet, self).filter_queryset(queryset)
+    return queryset.order_by('order')
+
 class ForumPagination(PageNumberPagination):
     page_size = 15
     max_page_size = 20
@@ -213,10 +247,10 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
     page = self.paginate_queryset(forum.threads.all().order_by('-is_sticky', '-modified'))
     threads = {}
     if page is not None:
-      serializer = serializers.ThreadSerializer(page, many=True, context={'request': request})
+      serializer = serializers.FullThreadSerializer(page, many=True, context={'request': request})
       threads = self.get_paginated_response(serializer.data).data
     else:
-      threads = serializers.ThreadSerializer(forum.threads.all().order_by('-modified'), many=True, context={'request': request}).data
+      threads = serializers.FullThreadSerializer(forum.threads.all().order_by('-modified'), many=True, context={'request': request}).data
 
     return Response({**{'threads': threads}, **serializers.BasicForumSerializer(forum).data})
 
@@ -258,6 +292,14 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
     queryset = super(ThreadViewSet, self).filter_queryset(queryset)
     return queryset.order_by('-created')
 
+  def get_serializer_class(self):
+    if self.action == 'create' or 'update' or 'partial_update':
+      if self.request.user.is_staff:
+        return serializers.FullThreadSerializer
+      else:
+        return serializers.ThreadSerializer
+    else:
+      return serializers.FullThreadSerializer
   def retrieve(self, request, pk=None):
     thread = self.get_object()
     print(pk)
@@ -268,7 +310,7 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
       posts = self.get_paginated_response(serializer.data).data
     else:
       posts = serializers.PostSerializer(thread.posts, many=True, context={'request': request})
-    return Response({**{'posts': posts, 'subscribed': request.user in thread.subscribers.all()}, **serializers.ThreadSerializer(thread, context={'request': request}).data})
+    return Response({**{'posts': posts, 'subscribed': request.user in thread.subscribers.all()}, **serializers.FullThreadSerializer(thread, context={'request': request}).data})
 
   @action(detail=True, methods=['post'])
   def change_subscription(self, request, pk=None):

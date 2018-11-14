@@ -26,6 +26,7 @@ class AvatarRename(object):
         ext = filename.split('.')[-1]
 
         filename = '{}.{}'.format(external_id_from_model_and_internal_id(apps.get_model(app_label="FigureSite", model_name="User"), instance.id), ext)
+        print("avatar: %s" % filename)
         # return the whole path to the file
         return os.path.join("avatars", filename)
 

@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     'ordered_model',
     'dry_rest_permissions',
     'channels',
-    'haystack'
+    'haystack',
+    'django_cleanup'
 ]
 
 ACCOUNT_ADAPTER ='FigureSite.adapters.FigureSiteAccountAdapter'

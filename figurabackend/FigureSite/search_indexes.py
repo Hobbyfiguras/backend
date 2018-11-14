@@ -1,10 +1,10 @@
 from django.utils import timezone
 from haystack import indexes
-from .models import Post, Thread
+from .models import Post, Thread, User
 from haystack import signals
 from haystack.exceptions import NotHandled
 
-from .search_fields import AvatarField
+from .search_fields import AvatarField, UserAvatarField
 
 class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
 
@@ -25,3 +25,10 @@ class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.filter(
             created__lte=timezone.now()
         )
+
+class UserIndex(indexes.SearchIndex, indexes.Indexable):
+
+    text = indexes.CharField(document=True, model_attr='username')
+    avatar = UserAvatarField(model_attr='avatar')
+    def get_model(self):
+        return User

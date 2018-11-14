@@ -195,6 +195,12 @@ class ThreadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Thread
+        exclude = ('subscribers', 'is_sticky',)
+
+class FullThreadSerializer(ThreadSerializer):
+
+    class Meta:
+        model = Thread
         exclude = ('subscribers',)
 
 class PrivateMessageSerializer(serializers.ModelSerializer):
