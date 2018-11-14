@@ -68,6 +68,17 @@ class User(AbstractUser):
     def get_by_natural_key(self, username):
         return self.get(**{self.model.USERNAME_FIELD + '__iexact': username})
 
+
+    def save(self, *args, **kwargs):
+        if self.avatar:
+            this = User.objects.get(id=self.id)
+            split_name = self.avatar.name.split('_')
+            if this.avatar != self.avatar:
+                this.avatar.delete()
+            if len(split_name) > 1:
+                self.avatar.name = split_name[0] + '.' + split_name[1].split('.')[1]
+                self.avatar.delete()
+        return super(User, self).save(*args, **kwargs)
     @staticmethod
     def has_read_permission(request):
         return True
