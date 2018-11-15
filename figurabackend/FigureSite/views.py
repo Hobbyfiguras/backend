@@ -61,7 +61,7 @@ class UserSerializer(HaystackSerializer):
         # The `fields` contains all the fields we want to include.
         # NOTE: Make sure you don't confuse these with model attributes. These
         # fields belong to the search index!
-        fields = [ "avatar", "text", "date_joined" ]
+        fields = [ "avatar", "text", "date_joined", "post_count", "is_staff" ]
 
 class UserSearchView(HaystackViewSet):
     index_models = [User]

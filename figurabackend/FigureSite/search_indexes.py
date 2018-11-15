@@ -46,5 +46,10 @@ class UserIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, model_attr='username')
     avatar = UserAvatarField(model_attr='avatar')
     date_joined = indexes.DateTimeField(model_attr='date_joined')
+    post_count = indexes.IntegerField()
+    is_staff = BooleanField(model_attr='is_staff')
+    def prepare_post_count(self, object):
+        return object.posts.count()
+
     def get_model(self):
         return User
