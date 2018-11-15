@@ -64,3 +64,4 @@ EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = 'Hobbyfiguras <noreply@hobbyfiguras.moe>'
 
 ADMINS = [('Alex Roman', 'eirexe@hobbyfiguras.moe')]
+SERVER_EMAIL = 'noreply@hobbyfiguras.moe'
