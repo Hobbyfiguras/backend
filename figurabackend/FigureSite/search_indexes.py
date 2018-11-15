@@ -6,6 +6,21 @@ from haystack.exceptions import NotHandled
 
 from .search_fields import AvatarField, UserAvatarField
 
+# HACK: Default boolean field is broken
+
+class BooleanField(indexes.BooleanField):
+
+    bool_map = {'true': True, 'false': False}
+
+    def convert(self, value):
+        if value is None:
+            return None
+
+        if value in self.bool_map:
+            return self.bool_map[value]
+
+        return bool(value)
+
 class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
 
     text = indexes.CharField(document=True, model_attr='title')
@@ -16,7 +31,7 @@ class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
     modified = indexes.DateTimeField(model_attr='modified')
     created = indexes.DateTimeField(model_attr='created')
     post_count = indexes.IntegerField(model_attr='post_count')
-    nsfw = indexes.BooleanField(model_attr='nsfw')
+    nsfw = BooleanField(model_attr='nsfw')
     last_post_creator = indexes.CharField(model_attr='last_post__creator__username')
     def get_model(self):
         return Thread
