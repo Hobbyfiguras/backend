@@ -310,9 +310,9 @@ class Thread(models.Model):
 
     @property
     def first_post(self):
-        ordered_posts = self.posts.all().order_by('modified')
+        ordered_posts = self.posts.all().order_by('-modified')
         if ordered_posts.count() > 0:
-            return self.posts.all().order_by('modified')[0]
+            return ordered_posts[0]
         else:
             return None
 
