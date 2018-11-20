@@ -408,7 +408,6 @@ class PostViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveMod
       # forcibly invalidate the prefetch cache on the instance.
       post._prefetched_objects_cache = {}
 
-    print(serializer.data)
     return Response(serializer.data)
   @action(detail=True, methods=['post'])
   def delete(self, request, pk=None):
