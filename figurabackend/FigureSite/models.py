@@ -348,7 +348,7 @@ class Thread(models.Model):
 class Post(models.Model):
     creator = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
     thread = models.ForeignKey(Thread, related_name="posts", on_delete=models.CASCADE)
-    content = models.TextField(max_length=20000)
+    content = models.TextField(max_length=40000)
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField(editable=False)
     deleted = models.BooleanField(default=False)
