@@ -302,15 +302,15 @@ class Thread(models.Model):
         return super(Thread, self).save(*args, **kwargs)
     @property
     def last_post(self):
-        ordered_posts = self.posts.all().order_by('-modified')
+        ordered_posts = self.posts.all().order_by('-created')
         if ordered_posts.count() > 0:
-            return self.posts.all().order_by('-modified')[0]
+            return self.posts.all().order_by('-created')[0]
         else:
             return None
 
     @property
     def first_post(self):
-        ordered_posts = self.posts.all().order_by('-modified')
+        ordered_posts = self.posts.all().order_by('created')
         if ordered_posts.count() > 0:
             return ordered_posts[0]
         else:
