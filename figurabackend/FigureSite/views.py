@@ -25,6 +25,7 @@ from .search_indexes import ThreadIndex, UserIndex
 from django.db.models import Q
 from drf_haystack.serializers import HaystackSerializer
 from drf_haystack.viewsets import HaystackViewSet
+from rest_framework import filters
 
 class PrivateMessagePagination(PageNumberPagination):
     page_size = 20
@@ -221,6 +222,8 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
   permission_classes = (DRYPermissions,)
   serializer_class = serializers.FullForumSerializer
   lookup_field = 'slug'
+  filter_backends = (filters.OrderingFilter,)
+  ordering_fields = ('created',)
 
   def get_serializer_class(self):
     if self.action == 'create' or self.action == 'partial_update':
@@ -242,7 +245,8 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
   @action(detail=True, pagination_class=ForumPagination)
   def threads(self, request, slug=None):
     forum = self.get_object()
-    page = self.paginate_queryset(forum.threads.all().order_by('-is_sticky', '-modified'))
+    filtered_queryset = filters.OrderingFilter().filter_queryset(request, forum.threads.all().order_by('-is_sticky', '-modified'), self)
+    page = self.paginate_queryset(filtered_queryset)
     threads = {}
     if page is not None:
       serializer = serializers.FullThreadSerializer(page, many=True, context={'request': request})
