@@ -254,7 +254,7 @@ class PrivateMessage(models.Model):
         return super(PrivateMessage, self).save(*args, **kwargs)
 
 class Thread(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=300)
     creator = models.ForeignKey(User, related_name="threads", on_delete=models.CASCADE)
     forum = models.ForeignKey(Forum, related_name="threads", on_delete=models.CASCADE)
     created = models.DateTimeField(editable=False)
