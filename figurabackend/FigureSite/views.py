@@ -329,6 +329,7 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
     thread.nsfw = True
     thread.save()
     return Response({}, status=status.HTTP_200_OK)
+  @action(detail=True, methods=['post'])
   def create_post(self, request, pk=None):
     thread = self.get_object()
     request.data['creator'] = request.user.id
