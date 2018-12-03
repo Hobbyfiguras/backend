@@ -317,9 +317,18 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
   @action(detail=True, methods=['post'])
   def change_subscription(self, request, pk=None):
     thread = self.get_object()
-    thread.change_user_subscription(request.user, request.data['subscribed'])
-    return Response({}, status=status.HTTP_200_OK)
+    if 'subscribed' in request.data:
+      thread.change_user_subscription(request.user, request.data['subscribed'])
+      return Response({}, status=status.HTTP_200_OK)
+    else:
+      return Response({}, status=status.HTTP_400_BAD_REQUEST)
+  
   @action(detail=True, methods=['post'])
+  def make_nsfw(self, request, pk=None):
+    thread = self.get_object()
+    thread.nsfw = True
+    thread.save()
+    return Response({}, status=status.HTTP_200_OK)
   def create_post(self, request, pk=None):
     thread = self.get_object()
     request.data['creator'] = request.user.id

@@ -294,6 +294,17 @@ class Thread(models.Model):
         else:
             return False
 
+    @staticmethod
+    @authenticated_users
+    def has_make_nsfw_permission(request):
+        return True
+    @allow_staff_or_superuser
+    def has_object_make_nsfw_permission(self, request):
+        if self.creator == request.user:
+            return True
+        else:
+            return False
+
     def save(self, *args, **kwargs):
         if not self.id:
             self.created = timezone.now()
