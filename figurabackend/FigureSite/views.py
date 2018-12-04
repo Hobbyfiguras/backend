@@ -322,7 +322,21 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
       return Response({}, status=status.HTTP_200_OK)
     else:
       return Response({}, status=status.HTTP_400_BAD_REQUEST)
-  
+
+  @action(detail=True, methods=['post'])
+  def move_thread(self, request, pk=None):
+    thread = self.get_object()
+    print(request.data)
+    if 'forum' in request.data:
+      forum = Forum.objects.get(id=internal_id_from_model_and_external_id(Forum, request.data['forum']))
+      if forum:
+        thread.forum = forum
+        thread.save()
+        return Response({}, status=status.HTTP_200_OK)
+      else:
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+    else:
+      return Response({}, status=status.HTTP_400_BAD_REQUEST)
   @action(detail=True, methods=['post'])
   def make_nsfw(self, request, pk=None):
     thread = self.get_object()

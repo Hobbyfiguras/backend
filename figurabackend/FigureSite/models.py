@@ -294,6 +294,14 @@ class Thread(models.Model):
         else:
             return False
 
+    @staticmethod
+    @authenticated_users
+    def has_move_thread_permission(request):
+        return True
+    @allow_staff_or_superuser
+    def has_object_move_thread_permission(self, request):
+        return False
+
     def save(self, *args, **kwargs):
         if not self.id:
             self.created = timezone.now()
