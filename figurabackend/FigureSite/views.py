@@ -417,6 +417,10 @@ class PostViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.RetrieveMod
   serializer_class = serializers.PostSerializer
   permission_classes = (DRYPermissions,)
 
+  def filter_queryset(self, queryset):
+    queryset = super(PostViewSet, self).filter_queryset(queryset)
+    return queryset.order_by('-created')
+
   def get_serializer_class(self):
     if self.action == 'partial_update':
       return serializers.UpdatePostSerializer
