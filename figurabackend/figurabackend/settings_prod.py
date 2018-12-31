@@ -26,7 +26,7 @@ with open('/etc/mail_password.txt') as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'hobbyfiguras.moe']
+ALLOWED_HOSTS = ['127.0.0.1', 'hobbyfiguras.moe', 'www.hobbyfiguras.moe']
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
