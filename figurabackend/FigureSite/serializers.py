@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCFigure
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -40,6 +40,12 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         model = User
         exclude = ('password',)
 
+
+class MFCFigureSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=MFCFigure)
+    class Meta:
+        model = MFCFigure
+        fields = '__all__'
 
 
 class MinimalUserSerializer(serializers.ModelSerializer):

@@ -242,6 +242,17 @@ class PrivateMessage(models.Model):
             self.created = timezone.now()
         return super(PrivateMessage, self).save(*args, **kwargs)
 
+class MFCFigure(models.Model):
+    created = models.DateTimeField(editable=False)
+    title = models.TextField()
+    manufacturer = models.CharField()
+    mfc_id = models.IntegerField()
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(MFCFigure, self).save(*args, **kwargs)
+
 class Thread(models.Model):
     title = models.CharField(max_length=300)
     creator = models.ForeignKey(User, related_name="threads", on_delete=models.CASCADE)
@@ -252,6 +263,7 @@ class Thread(models.Model):
     nsfw = models.BooleanField(default=False)
     is_sticky = models.BooleanField(default=False)
     subscribers = models.ManyToManyField(User, related_name="subscribed_threads")
+    related_figures = models.ManyToManyField(MFCFigure, related_name="related_threads")
 
     @property
     def hid(self):
@@ -535,3 +547,4 @@ class BanReason(models.Model):
         if not self.id:
             self.created = timezone.now()
         return super(BanReason, self).save(*args, **kwargs)
+

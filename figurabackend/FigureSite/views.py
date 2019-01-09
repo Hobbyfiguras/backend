@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason, PrivateMessage
+from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason, PrivateMessage, MFCFigure
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -109,6 +109,12 @@ class ReportViewSet(viewsets.ModelViewSet):
     return queryset.order_by('-created')
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
+
+class MFCFigureViewSet(ExternalIdViewMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+  queryset = MFCFigure.objects.all()
+  permission_classes = (DRYPermissions,)
+  serializer_class = serializers.MFCFigureSerializer
+
 class PrivateMessageViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = PrivateMessage.objects.all()
   permission_classes = (DRYPermissions,)
