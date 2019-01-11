@@ -14,7 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from django.apps import apps
 from django.utils import timezone
-
+from mfc import mfc_parser
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -242,16 +242,23 @@ class PrivateMessage(models.Model):
             self.created = timezone.now()
         return super(PrivateMessage, self).save(*args, **kwargs)
 
-class MFCFigure(models.Model):
+class MFCItem(models.Model):
     created = models.DateTimeField(editable=False)
     title = models.TextField()
-    manufacturer = models.CharField()
-    mfc_id = models.IntegerField()
+    manufacturer = models.CharField(max_length=300)
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
             self.created = timezone.now()
-        return super(MFCFigure, self).save(*args, **kwargs)
+        return super(MFCItem, self).save(*args, **kwargs)
+
+    @classmethod
+    def get_or_fetch_mfc_item(cls, id):
+        item = cls.objects.get(id=id)
+        if not item:
+            mfc_item = mfc_parser.get_item_data(id)
+            item = cls(id=mfc_item.id, title=title)
+        return item
 
 class Thread(models.Model):
     title = models.CharField(max_length=300)
@@ -263,7 +270,7 @@ class Thread(models.Model):
     nsfw = models.BooleanField(default=False)
     is_sticky = models.BooleanField(default=False)
     subscribers = models.ManyToManyField(User, related_name="subscribed_threads")
-    related_figures = models.ManyToManyField(MFCFigure, related_name="related_threads")
+    related_items = models.ManyToManyField(MFCItem, related_name="related_threads")
 
     @property
     def hid(self):

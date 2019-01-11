@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason, PrivateMessage, MFCFigure
+from .models import User, ForumCategory, Forum, Thread, Post, Report, VoteType, Notification, BanReason, PrivateMessage, MFCItem
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -109,11 +109,6 @@ class ReportViewSet(viewsets.ModelViewSet):
     return queryset.order_by('-created')
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
-
-class MFCFigureViewSet(ExternalIdViewMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-  queryset = MFCFigure.objects.all()
-  permission_classes = (DRYPermissions,)
-  serializer_class = serializers.MFCFigureSerializer
 
 class PrivateMessageViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = PrivateMessage.objects.all()
@@ -267,6 +262,11 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
     forum = self.get_object()
     request.data['creator'] = request.user.id
     request.data['forum'] = forum.id
+    related_items = []
+    if request.data['related_items']:
+      for item in request.data['related_items']:
+        db_item = MFCItem.get_or_fetch_mfc_item(item)
+        related_items.append(db_item)
     
     thread_serializer = serializers.CreateThreadSerializer(data=request.data)
     if thread_serializer.is_valid() and request.data['content']:
@@ -277,9 +277,11 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
         'content': request.data['content'],
         'nsfw': request.data['nsfw']
       }
+      thread.related_items
       post_serializer = serializers.CreatePostSerializer(data=post_data)
       if post_serializer.is_valid():
         post_serializer.save()
+        thread.related_items = related_items
         thread.save()
         data = thread_serializer.data
         data['slug'] = thread.slug

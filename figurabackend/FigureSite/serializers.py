@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCFigure
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -41,10 +41,10 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
-class MFCFigureSerializer(serializers.ModelSerializer):
-    id = HashIdField(model=MFCFigure)
+class MFCItemSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=MFCItem)
     class Meta:
-        model = MFCFigure
+        model = MFCItem
         fields = '__all__'
 
 
@@ -204,7 +204,7 @@ class ThreadSerializer(serializers.ModelSerializer):
         exclude = ('subscribers', 'is_sticky',)
 
 class FullThreadSerializer(ThreadSerializer):
-
+    related_items = MFCItemSerializer(many=True)
     class Meta:
         model = Thread
         exclude = ('subscribers',)
