@@ -251,6 +251,7 @@ class Thread(models.Model):
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     nsfw = models.BooleanField(default=False)
     is_sticky = models.BooleanField(default=False)
+    is_closed = models.BooleanField(default=False)
     subscribers = models.ManyToManyField(User, related_name="subscribed_threads")
 
     @property

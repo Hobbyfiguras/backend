@@ -346,6 +346,11 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
   @action(detail=True, methods=['post'])
   def create_post(self, request, pk=None):
     thread = self.get_object()
+
+    if thread.is_closed:
+      if not request.user.is_staff:
+        return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
+
     request.data['creator'] = request.user.id
     request.data['thread'] = thread.id
     serializer = serializers.CreatePostSerializer(data=request.data)
