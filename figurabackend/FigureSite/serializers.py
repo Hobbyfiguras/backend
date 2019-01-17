@@ -42,7 +42,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
 
 class MFCItemSerializer(serializers.ModelSerializer):
-    id = HashIdField(model=MFCItem)
     class Meta:
         model = MFCItem
         fields = '__all__'

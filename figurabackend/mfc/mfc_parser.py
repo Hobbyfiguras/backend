@@ -74,25 +74,3 @@ def getUserFigures(username, page_n=1, items_per_page = 22):
     }
 
     return result
-
-def get_item_data(item_id):
-    url_template = string.Template('https://myfigurecollection.net/item/$item_id')
-    url = url_template.substitute(item_id=item_id)
-    try:
-        page = requests.get(url)
-    except requests.exceptions.HTTPError as err:
-        raise Http404
-    if page.status_code != 200:
-        return None
-
-    soup = BeautifulSoup(page.content, 'lxml')
-    result = {
-        'title': soup.title.string.split(' | ')[0],
-        'id': item_id
-    }
-
-    return result
-
-from .mfc_api import make_mfc_request
-
-make_mfc_request

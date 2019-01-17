@@ -14,7 +14,8 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from django.apps import apps
 from django.utils import timezone
-from mfc import mfc_parser
+from mfc import mfc_api
+from django.http import Http404
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -243,9 +244,8 @@ class PrivateMessage(models.Model):
         return super(PrivateMessage, self).save(*args, **kwargs)
 
 class MFCItem(models.Model):
+    name = models.TextField()
     created = models.DateTimeField(editable=False)
-    title = models.TextField()
-    manufacturer = models.CharField(max_length=300)
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
@@ -254,12 +254,17 @@ class MFCItem(models.Model):
 
     @classmethod
     def get_or_fetch_mfc_item(cls, id):
-        item = cls.objects.get(id=id)
-        if not item:
-            mfc_item = mfc_parser.get_item_data(id)
-            item = cls(id=mfc_item.id, title=title)
+        try:
+            item = cls.objects.get(id=id)
+        except cls.DoesNotExist as err:
+            try:
+                mfc_item = mfc_api.get_figure_data(id)
+            except:
+                return None
+            # HACK: Django doesn't really call our overriden save method from inside a classmethod, so we have to add created here 
+            item = cls(id=mfc_item['id'], name=mfc_item['name'], created=timezone.now())
+            item.save()
         return item
-
 class Thread(models.Model):
     title = models.CharField(max_length=300)
     creator = models.ForeignKey(User, related_name="threads", on_delete=models.CASCADE)

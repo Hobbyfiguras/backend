@@ -266,7 +266,8 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
     if request.data['related_items']:
       for item in request.data['related_items']:
         db_item = MFCItem.get_or_fetch_mfc_item(item)
-        related_items.append(db_item)
+        if db_item:
+          related_items.append(db_item)
     
     thread_serializer = serializers.CreateThreadSerializer(data=request.data)
     if thread_serializer.is_valid() and request.data['content']:
@@ -281,7 +282,7 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
       post_serializer = serializers.CreatePostSerializer(data=post_data)
       if post_serializer.is_valid():
         post_serializer.save()
-        thread.related_items = related_items
+        thread.related_items.set(related_items)
         thread.save()
         data = thread_serializer.data
         data['slug'] = thread.slug
