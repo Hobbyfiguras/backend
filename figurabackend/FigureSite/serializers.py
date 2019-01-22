@@ -208,6 +208,11 @@ class FullThreadSerializer(ThreadSerializer):
         model = Thread
         exclude = ('subscribers',)
 
+class FullCreateThreadSerializer(ThreadSerializer):
+    class Meta:
+        model = Thread
+        exclude = ('subscribers',)
+
 class PrivateMessageSerializer(serializers.ModelSerializer):
     id = HashIdField(model=PrivateMessage)
     creator = PublicUserSerializer()
