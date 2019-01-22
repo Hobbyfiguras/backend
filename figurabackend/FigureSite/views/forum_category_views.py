@@ -9,7 +9,6 @@ from FigureSite import serializers
 
 class ForumCategoryViewSet(viewsets.ModelViewSet):
   queryset = ForumCategory.objects.all()
-  permission_classes = (DRYPermissions,)
   serializer_class = serializers.ForumCategorySerializer
   lookup_field = 'slug'
 

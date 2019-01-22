@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'dry_rest_permissions',
     'channels',
     'haystack',
-    'django_cleanup'
+    'guardian'
 ]
 
 ACCOUNT_ADAPTER ='FigureSite.adapters.FigureSiteAccountAdapter'
@@ -37,6 +37,11 @@ SITE_ID = 1
 
 REST_USE_JWT = True
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
+)
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
       'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -44,7 +49,7 @@ REST_FRAMEWORK = {
       'rest_framework.authentication.BasicAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-      'rest_framework.permissions.IsAdminUser',
+      'FigureSite.permissions.BaseObjectPermissions',
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.ScopedRateThrottle',

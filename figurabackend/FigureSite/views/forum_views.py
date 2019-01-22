@@ -19,12 +19,20 @@ class ForumPagination(PageNumberPagination):
 
 class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Forum.objects.all()
-  permission_classes = (DRYPermissions,)
   serializer_class = serializers.FullForumSerializer
   lookup_field = 'slug'
   filter_backends = (filters.OrderingFilter,)
   ordering_fields = ('created',)
+  action_perms_map = {
+    'change_subscription': ['FigureSite.change_thread_subscription'],
+    'move_thread': ['FigureSite.move_thread'],
+    'make_nsfw': ['FigureSite.make_thread_nsfw'],
+    'create_thread': ['FigureSite.create_threads'],
+  }
 
+  safe_actions = [
+    'threads'
+  ]
   def get_serializer_class(self):
     if self.action == 'create' or self.action == 'partial_update':
       return serializers.CreateForumSerializer
@@ -54,7 +62,7 @@ class ForumViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, mixins.Updat
     else:
       threads = serializers.FullThreadSerializer(forum.threads.all().order_by('-modified'), many=True, context={'request': request}).data
 
-    return Response({**{'threads': threads}, **serializers.BasicForumSerializer(forum).data})
+    return Response({**{'threads': threads}, **serializers.BasicForumSerializer(forum, context={'request': request}).data})
 
   @action(detail=True, methods=['post'])
   def create_thread(self, request, slug=None):

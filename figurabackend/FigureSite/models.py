@@ -131,7 +131,6 @@ class ForumCategory(OrderedModel):
     description = models.CharField(max_length=200, null=True, blank=True)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
 
-
     @staticmethod
     def has_read_permission(request):
         return True
@@ -166,6 +165,15 @@ class Forum(OrderedModel):
     only_staff_can_post = models.BooleanField(default=False)
     icon = ResizedImageField(size=[128, 128], crop=['middle', 'center'], upload_to=forum_icon_rename, force_format='PNG', null=True, blank=True)
     order_with_respect_to = 'category'
+
+    class Meta:
+        permissions = (
+            ('change_threads_subscription', 'Change subscription status in forum'),
+            ('move_threads', 'Move threads in forum'),
+            ('make_threads_nsfw', 'Make thread be NSFW in forum'),
+            ('create_threads', 'Create threads in forum'),
+            ('view_forum', 'View forum'),
+        )
 
     @staticmethod
     def has_read_permission(request):

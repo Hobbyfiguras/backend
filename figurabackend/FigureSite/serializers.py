@@ -9,7 +9,7 @@ from rest_framework_serializer_extensions.serializers import SerializerExtension
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from .avatars import get_avatar
-
+from guardian.shortcuts import get_perms
 class AvatarField(serializers.ImageField):
 
     def get_attribute(self, obj):
@@ -109,7 +109,9 @@ class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
 class BasicForumSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=Forum)
     thread_count = serializers.SerializerMethodField()
-
+    user_perms = serializers.SerializerMethodField()
+    def get_user_perms(self, obj):
+        return get_perms(self.context['request'].user , obj)
     def get_thread_count(self, obj):
         return obj.threads.count()
 
@@ -243,7 +245,6 @@ class ForumCategorySerializer(serializers.ModelSerializer):
 class FullForumSerializer(serializers.ModelSerializer):
     threads = ThreadSerializer(many=True, read_only=True)
     category = ForumCategorySerializer()
-
     class Meta:
         model = Forum
         lookup_field = 'slug'
