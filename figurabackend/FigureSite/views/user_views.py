@@ -1,7 +1,8 @@
+from rest_framework import permissions, status, viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import permissions
-from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework_serializer_extensions.utils import internal_id_from_model_and_external_id
+from rest_framework.response import Response
 
 from drf_haystack.serializers import HaystackSerializer
 from drf_haystack.viewsets import HaystackViewSet
@@ -9,7 +10,7 @@ from drf_haystack.viewsets import HaystackViewSet
 from dry_rest_permissions.generics import DRYPermissions
 
 from FigureSite.search_indexes import UserIndex
-from FigureSite.models import User
+from FigureSite.models import User, Post
 from FigureSite import serializers
 
 

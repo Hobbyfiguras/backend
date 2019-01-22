@@ -104,6 +104,8 @@ class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
         model = Thread
         fields = ('creator', 'title', 'forum', 'nsfw',)
 
+
+
 class BasicForumSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=Forum)
     thread_count = serializers.SerializerMethodField()
