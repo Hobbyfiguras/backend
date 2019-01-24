@@ -135,7 +135,7 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
 
   def update(self, request, *args, **kwargs):
     related_items = []
-    if request.data['related_items']:
+    if 'related_items' in request.data:
       for item in request.data['related_items']:
         db_item = MFCItem.get_or_fetch_mfc_item(item)
         if db_item:
