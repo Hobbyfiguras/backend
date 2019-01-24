@@ -28,7 +28,7 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
             if view.action in view.safe_actions:
                 return True
             if not view.action in self.default_actions:
-                return request.user.has_perms(has_perms(view.action_perms_map[view.action]))
+                return request.user.has_perms(view.action_perms_map[view.action])
 
         perms = self.get_required_permissions(request.method, queryset.model)
 
