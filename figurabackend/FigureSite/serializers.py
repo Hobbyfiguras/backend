@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -9,7 +9,7 @@ from rest_framework_serializer_extensions.serializers import SerializerExtension
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from .avatars import get_avatar
-
+from guardian.shortcuts import get_perms
 class AvatarField(serializers.ImageField):
 
     def get_attribute(self, obj):
@@ -40,6 +40,11 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         model = User
         exclude = ('password',)
 
+
+class MFCItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MFCItem
+        fields = '__all__'
 
 
 class MinimalUserSerializer(serializers.ModelSerializer):
@@ -99,10 +104,14 @@ class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
         model = Thread
         fields = ('creator', 'title', 'forum', 'nsfw',)
 
+
+
 class BasicForumSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=Forum)
     thread_count = serializers.SerializerMethodField()
-
+    user_perms = serializers.SerializerMethodField()
+    def get_user_perms(self, obj):
+        return get_perms(self.context['request'].user , obj)
     def get_thread_count(self, obj):
         return obj.threads.count()
 
@@ -198,7 +207,12 @@ class ThreadSerializer(serializers.ModelSerializer):
         exclude = ('subscribers', 'is_sticky',)
 
 class FullThreadSerializer(ThreadSerializer):
+    related_items = MFCItemSerializer(many=True)
+    class Meta:
+        model = Thread
+        exclude = ('subscribers',)
 
+class FullCreateThreadSerializer(ThreadSerializer):
     class Meta:
         model = Thread
         exclude = ('subscribers',)
@@ -231,7 +245,6 @@ class ForumCategorySerializer(serializers.ModelSerializer):
 class FullForumSerializer(serializers.ModelSerializer):
     threads = ThreadSerializer(many=True, read_only=True)
     category = ForumCategorySerializer()
-
     class Meta:
         model = Forum
         lookup_field = 'slug'

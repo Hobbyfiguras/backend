@@ -14,7 +14,8 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework_serializer_extensions.utils import external_id_from_model_and_internal_id
 from django.apps import apps
 from django.utils import timezone
-
+from mfc import mfc_api
+from django.http import Http404
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -130,7 +131,6 @@ class ForumCategory(OrderedModel):
     description = models.CharField(max_length=200, null=True, blank=True)
     slug = models.SlugField(max_length=100, blank=True, unique=True)
 
-
     @staticmethod
     def has_read_permission(request):
         return True
@@ -165,6 +165,15 @@ class Forum(OrderedModel):
     only_staff_can_post = models.BooleanField(default=False)
     icon = ResizedImageField(size=[128, 128], crop=['middle', 'center'], upload_to=forum_icon_rename, force_format='PNG', null=True, blank=True)
     order_with_respect_to = 'category'
+
+    class Meta:
+        permissions = (
+            ('change_threads_subscription', 'Change subscription status in forum'),
+            ('move_threads', 'Move threads in forum'),
+            ('make_threads_nsfw', 'Make thread be NSFW in forum'),
+            ('create_threads', 'Create threads in forum'),
+            ('view_forum', 'View forum'),
+        )
 
     @staticmethod
     def has_read_permission(request):
@@ -242,6 +251,28 @@ class PrivateMessage(models.Model):
             self.created = timezone.now()
         return super(PrivateMessage, self).save(*args, **kwargs)
 
+class MFCItem(models.Model):
+    name = models.TextField()
+    created = models.DateTimeField(editable=False)
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(MFCItem, self).save(*args, **kwargs)
+
+    @classmethod
+    def get_or_fetch_mfc_item(cls, id):
+        try:
+            item = cls.objects.get(id=id)
+        except cls.DoesNotExist as err:
+            try:
+                mfc_item = mfc_api.get_figure_data(id)
+            except:
+                return None
+            # HACK: Django doesn't really call our overriden save method from inside a classmethod, so we have to add created here 
+            item = cls(id=mfc_item['id'], name=mfc_item['name'], created=timezone.now())
+            item.save()
+        return item
 class Thread(models.Model):
     title = models.CharField(max_length=300)
     creator = models.ForeignKey(User, related_name="threads", on_delete=models.CASCADE)
@@ -253,6 +284,7 @@ class Thread(models.Model):
     is_sticky = models.BooleanField(default=False)
     is_closed = models.BooleanField(default=False)
     subscribers = models.ManyToManyField(User, related_name="subscribed_threads")
+    related_items = models.ManyToManyField(MFCItem, related_name="related_threads")
 
     @property
     def hid(self):
@@ -536,3 +568,4 @@ class BanReason(models.Model):
         if not self.id:
             self.created = timezone.now()
         return super(BanReason, self).save(*args, **kwargs)
+

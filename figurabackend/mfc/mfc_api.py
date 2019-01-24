@@ -29,3 +29,6 @@ def figure_search(text, page=1):
 
 def get_pictures(username='', page=1):
   return make_mfc_request({'username': username, 'page': page}, objects='pictures', request='search')
+
+def get_figure_data(pk):
+  return make_mfc_request({'id': pk}).json()["items"]["item"]

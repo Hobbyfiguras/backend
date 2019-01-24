@@ -4,6 +4,7 @@ import string
 from bs4 import BeautifulSoup
 import json
 import math
+from django.http import Http404
 
 MFC_ITEMS_PER_PAGE = 88
 
