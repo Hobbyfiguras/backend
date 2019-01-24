@@ -25,8 +25,10 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
         queryset = self._queryset(view)
 
         if getattr(view, 'action'):
+            if view.action in view.safe_actions:
+                return True
             if not view.action in self.default_actions:
-                return False
+                return request.user.has_perms(has_perms(view.action_perms_map[view.action]))
 
         perms = self.get_required_permissions(request.method, queryset.model)
 
