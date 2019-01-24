@@ -24,9 +24,10 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
 
         queryset = self._queryset(view)
 
-        if getattr(view, 'action'):
-            if view.action in view.safe_actions:
-                return True
+        if hasattr(view, 'action'):
+            if hasattr(view, 'safe_actions'):
+                if view.action in view.safe_actions:
+                    return True
             if not view.action in self.default_actions:
                 return request.user.has_perms(view.action_perms_map[view.action])
 
@@ -43,11 +44,11 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
         perms = self.get_required_object_permissions(request.method, model_cls)
         is_action_safe = False
         # Check if the user also has action permissions:
-        if view.safe_actions:
+        if hasattr(view, 'safe_actions'):
             if view.action in view.safe_actions:
                 is_action_safe = True
         
-        if view.action:
+        if hasattr(view, 'action'):
             if not view.action in self.default_actions and not is_action_safe:
                 if not user.has_perms(view.action_perms_map[view.action], obj):
                     # If the user does not have permissions we need to determine if
