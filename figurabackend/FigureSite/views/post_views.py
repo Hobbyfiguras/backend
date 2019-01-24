@@ -12,7 +12,7 @@ from dry_rest_permissions.generics import DRYPermissions
 from django.http import Http404
 from django.utils import timezone
 
-from FigureSite.models import Post
+from FigureSite.models import Post, VoteType
 from FigureSite import serializers
 
 class PostsPagination(PageNumberPagination):

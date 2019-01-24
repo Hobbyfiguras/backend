@@ -15,7 +15,7 @@ from dry_rest_permissions.generics import DRYPermissions
 
 from django.utils import timezone
 
-from FigureSite.models import Thread, Notification, Forum
+from FigureSite.models import Thread, Notification, Forum, MFCItem
 from FigureSite import serializers
 from FigureSite.search_indexes import ThreadIndex
 from FigureSite.notifications import send_notification

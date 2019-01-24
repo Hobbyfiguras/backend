@@ -14,22 +14,22 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
     authenticated_users_only = False
 
     def has_permission(self, request, view):
-        if view.action in self.default_actions:
-            # Workaround to ensure DjangoModelPermissions are not applied
-            # to the root view when using DefaultRouter.
-            if getattr(view, '_ignore_model_permissions', False):
-                return True
+        if hasattr(view, 'action'):
+            if view.action in self.default_actions:
+                # Workaround to ensure DjangoModelPermissions are not applied
+                # to the root view when using DefaultRouter.
+                if getattr(view, '_ignore_model_permissions', False):
+                    return True
 
-            if not request.user or (
-            not request.user.is_authenticated and self.authenticated_users_only):
-                return False
+                if not request.user or (
+                not request.user.is_authenticated and self.authenticated_users_only):
+                    return False
 
-            queryset = self._queryset(view)
-            perms = self.get_required_permissions(request.method, queryset.model)
+                queryset = self._queryset(view)
+                perms = self.get_required_permissions(request.method, queryset.model)
 
-            return request.user.has_perms(perms)
-        else:
-            return True
+                return request.user.has_perms(perms)    
+        return True
 
     def has_object_permission(self, request, view, obj):
         # authentication checks have already executed via has_permission
