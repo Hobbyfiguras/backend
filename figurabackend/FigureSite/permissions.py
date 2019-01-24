@@ -13,23 +13,24 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
     ]
     authenticated_users_only = False
 
-    def has_permission(self, request, view):
-        if hasattr(view, 'action'):
-            if view.action in self.default_actions:
-                # Workaround to ensure DjangoModelPermissions are not applied
-                # to the root view when using DefaultRouter.
-                if getattr(view, '_ignore_model_permissions', False):
-                    return True
+    def has_permission(self, request, view):            # Workaround to ensure DjangoModelPermissions are not applied
+        # to the root view when using DefaultRouter.
+        if getattr(view, '_ignore_model_permissions', False):
+            return True
 
-                if not request.user or (
-                not request.user.is_authenticated and self.authenticated_users_only):
-                    return False
+        if not request.user or (
+        not request.user.is_authenticated and self.authenticated_users_only):
+            return False
 
-                queryset = self._queryset(view)
-                perms = self.get_required_permissions(request.method, queryset.model)
+        queryset = self._queryset(view)
 
-                return request.user.has_perms(perms)    
-        return True
+        if getattr(view, 'action'):
+            if not view.action in self.default_actions:
+                return False
+
+        perms = self.get_required_permissions(request.method, queryset.model)
+
+        return request.user.has_perms(perms)
 
     def has_object_permission(self, request, view, obj):
         # authentication checks have already executed via has_permission
@@ -46,7 +47,7 @@ class BaseObjectPermissions(permissions.DjangoObjectPermissions):
         
         if view.action:
             if not view.action in self.default_actions and not is_action_safe:
-                if not user.has_perms(view.action_perms_map[view.action]):
+                if not user.has_perms(view.action_perms_map[view.action], obj):
                     # If the user does not have permissions we need to determine if
                     # they have read permissions to see 403, or not, and simply see
                     # a 404 response.
