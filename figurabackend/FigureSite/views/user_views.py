@@ -9,10 +9,11 @@ from drf_haystack.viewsets import HaystackViewSet
 
 from dry_rest_permissions.generics import DRYPermissions
 
+from django.http import Http404
+
 from FigureSite.search_indexes import UserIndex
 from FigureSite.models import User, Post
 from FigureSite import serializers
-
 
 # Paginations
 
@@ -96,7 +97,10 @@ class UserViewSet(viewsets.ModelViewSet):
   def get_object(self):
     pk = self.kwargs.get('username')
     if pk == "current":
-      return self.request.user
+      if self.request.user.is_anonymous or self.request.user.username == "AnonymousUser":
+        raise Http404
+      else:
+        return self.request.user
 
     return super(UserViewSet, self).get_object()
 
