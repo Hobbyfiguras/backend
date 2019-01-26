@@ -140,7 +140,7 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
         db_item = MFCItem.get_or_fetch_mfc_item(item)
         if db_item:
           related_items.append(db_item)
-    del request.data['related_items']
+      del request.data['related_items']
     partial = kwargs.pop('partial', False)
     instance = self.get_object()
     serializer = self.get_serializer(instance, data=request.data, partial=partial)
