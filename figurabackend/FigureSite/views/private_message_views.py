@@ -30,10 +30,9 @@ class PrivateMessageViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.U
 
   def get_queryset(self):
     read = self.request.query_params.get('read', None)
-    print(read)
     if read:
       return PrivateMessage.objects.filter(receiver=self.request.user, read=str2bool(read))
-    elif self.action == 'sent':
+    elif self.request.query_params.get('sent', None):
       return PrivateMessage.objects.filter(creator=self.request.user)
     else:
       return PrivateMessage.objects.filter(receiver=self.request.user)
