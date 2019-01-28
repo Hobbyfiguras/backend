@@ -53,7 +53,7 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
 
   def filter_queryset(self, queryset):
     queryset = super(ThreadViewSet, self).filter_queryset(queryset)
-    return queryset.order_by('-created')
+    return queryset.order_by('-modified')
 
   def get_serializer_class(self):
     if self.action == 'create' or 'update' or 'partial_update':
@@ -65,7 +65,6 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
       return serializers.FullThreadSerializer
   def retrieve(self, request, pk=None):
     thread = self.get_object()
-    print(pk)
     page = self.paginate_queryset(thread.posts.all().order_by('created'))
     posts = {}
     if page is not None:
