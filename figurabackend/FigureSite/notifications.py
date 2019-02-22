@@ -9,7 +9,7 @@ def send_notification(request, notification):
     actor_serializer = serializers.PublicUserSerializer(notification.actor, context={'request': request})
     object_serialized = None
     if notification.notification_type == 'notification_post_sub':
-        object_serialized = serializers.NotificationPostSerializer(notification.notification_object).data        
+        object_serialized = serializers.NotificationPostSerializer(notification.notification_object, context={'request': request}).data        
     async_to_sync(get_channel_layer().group_send)(
         'notifications_%s' % notification.user.id,
             {

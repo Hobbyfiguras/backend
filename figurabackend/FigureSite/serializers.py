@@ -282,7 +282,7 @@ class NotificationPostSerializer(BasePostSerializer):
 class NotificationObjectField(serializers.RelatedField):
     def to_representation(self, value):
         if isinstance(value, Post):
-            return NotificationPostSerializer(value).data
+            return NotificationPostSerializer(value,context={'request': self.context['request']}).data
 
 class NotificationUserSerializer(serializers.ModelSerializer):
     avatar = AvatarField()
