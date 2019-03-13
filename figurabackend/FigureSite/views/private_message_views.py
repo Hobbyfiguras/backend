@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
 from rest_framework import viewsets
@@ -35,7 +37,7 @@ class PrivateMessageViewSet(ExternalIdViewMixin, mixins.ListModelMixin, mixins.U
     elif self.request.query_params.get('sent', None):
       return PrivateMessage.objects.filter(creator=self.request.user)
     else:
-      return PrivateMessage.objects.filter(receiver=self.request.user)
+      return PrivateMessage.objects.filter(Q(receiver=self.request.user) | Q(creator=self.request.user))
 
   def filter_queryset(self, queryset):
     queryset = super(PrivateMessageViewSet, self).filter_queryset(queryset)
