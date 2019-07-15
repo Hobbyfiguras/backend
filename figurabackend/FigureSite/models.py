@@ -16,6 +16,7 @@ from django.apps import apps
 from django.utils import timezone
 from mfc import mfc_api
 from django.http import Http404
+from guardian.mixins import GuardianUserMixin
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -55,7 +56,7 @@ avatar_rename = AvatarRename()
 forum_icon_rename = ForumIconRename()
 vote_type_rename = VoteTypeRename()
 
-class User(AbstractUser):
+class User(AbstractUser, GuardianUserMixin):
     objects = MyUserManager()
     avatar = ResizedImageField(size=[256, 256], crop=['middle', 'center'], force_format='JPEG', upload_to=avatar_rename, null=True, blank=True)
     mal_username = models.CharField(max_length=80, null=True, blank=True)
@@ -171,8 +172,7 @@ class Forum(OrderedModel):
             ('change_threads_subscription', 'Change subscription status in forum'),
             ('move_threads', 'Move threads in forum'),
             ('make_threads_nsfw', 'Make thread be NSFW in forum'),
-            ('create_threads', 'Create threads in forum'),
-            ('view_forum', 'View forum'),
+            ('create_threads', 'Create threads in forum')
         )
 
     @staticmethod
