@@ -1,16 +1,16 @@
 asn1crypto==0.24.0
 beautifulsoup4==4.6.3
 certifi==2018.8.24
-cffi==1.11.5
+cffi==1.12.2
 chardet==3.0.4
 click==6.7
 cryptography==2.3.1
 defusedxml==0.5.0
-Django==2.0.8
+Django==2.1.5
 drf-haystack==1.8.4
 django-allauth==0.37.1
 django-cors-headers==2.4.0
-django-hashid-field==2.1.1
+django-hashid-field==3.1.1
 django-ordered-model==2.1.0
 django-resized==0.3.9
 django-rest-auth==0.9.3
@@ -27,7 +27,7 @@ lxml==4.2.4
 oauthlib==2.1.0
 Pillow==5.2.0
 pipreqs==0.4.9
-psycopg2-binary==2.7.5
+psycopg2-binary==2.8.4
 pycparser==2.18
 PyJWT==1.6.4
 pyreqs==0.1.1
@@ -48,3 +48,4 @@ channels-redis==2.3.0
 pysolr==3.8.1
 django-cleanup==2.1.0
 django-guardian==1.4.9
+django-money==1.0

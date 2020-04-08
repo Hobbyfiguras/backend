@@ -50,4 +50,4 @@ HAYSTACK_CONNECTIONS = {
     },
 }
 
-MEDIA_ROOT='/mnt/c/Users/EIREXE/figuritas/backend/media'
+MEDIA_ROOT='/home/eirexe/hobbyfiguras/media'

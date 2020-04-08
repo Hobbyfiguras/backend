@@ -17,6 +17,8 @@ from django.utils import timezone
 from mfc import mfc_api
 from django.http import Http404
 from guardian.mixins import GuardianUserMixin
+from djmoney.models.fields import MoneyField
+from uuid import uuid4
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -31,6 +33,19 @@ class AvatarRename(object):
         print("avatar: %s" % filename)
         # return the whole path to the file
         return os.path.join("avatars", filename)
+
+@deconstructible
+class ClassifiedImageRename(object):
+    def __call__(self, instance, filename):
+        # Remove the extension from the filename
+        ext = filename.split('.')[-1]
+        if instance.id:
+            filename = '{}.{}'.format(external_id_from_model_and_internal_id(apps.get_model(app_label="FigureSite", model_name="ClassifiedImage"), instance.id), ext)
+        else:
+            filename = '{}.{}'.format(uuid4().hex, ext)
+            
+        # return the whole path to the file
+        return os.path.join("classified_images", filename)
 
 @deconstructible
 class ForumIconRename(object):
@@ -55,7 +70,7 @@ class VoteTypeRename(object):
 avatar_rename = AvatarRename()
 forum_icon_rename = ForumIconRename()
 vote_type_rename = VoteTypeRename()
-
+classified_image_rename = ClassifiedImageRename()
 class User(AbstractUser, GuardianUserMixin):
     objects = MyUserManager()
     avatar = ResizedImageField(size=[256, 256], crop=['middle', 'center'], force_format='JPEG', upload_to=avatar_rename, null=True, blank=True)
@@ -569,3 +584,34 @@ class BanReason(models.Model):
             self.created = timezone.now()
         return super(BanReason, self).save(*args, **kwargs)
 
+class ClassifiedAD(models.Model):
+    created = models.DateTimeField(editable=False)
+    creator = models.ForeignKey(User, related_name="published_ads", on_delete=models.CASCADE)
+    content = models.TextField(max_length=40000)
+    title = models.CharField(max_length=300)
+    price = MoneyField(max_digits=14, decimal_places=2, default_currency='EUR')
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(ClassifiedAD, self).save(*args, **kwargs)
+    @staticmethod
+    def has_read_permission(request):
+        return True
+    @staticmethod
+    @authenticated_users
+    def has_write_permission(request):
+        return True
+        
+    @allow_staff_or_superuser
+    def has_object_write_permission(self, request):
+        print(self.id)
+        print(request.user.id)
+        if self == request.user:
+            return True
+        else:
+            return False
+class ClassifiedImage(models.Model):
+    image = ResizedImageField(force_format='JPEG', upload_to=classified_image_rename, null=True, blank=True)
+    ad = models.ForeignKey(ClassifiedAD, related_name="images", on_delete=models.CASCADE)
+    primary = models.BooleanField(default=False)

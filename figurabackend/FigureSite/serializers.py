@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -297,3 +297,25 @@ class NotificationSerializer(SerializerExtensionsMixin, serializers.ModelSeriali
     class Meta:
         model = Notification
         exclude = ('object_id', 'user', 'object_type',)
+
+class ClassifiedImageSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=ClassifiedImage)
+    class Meta:
+        model = ClassifiedImage
+        fields = '__all__'
+class ClassifiedADSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=ClassifiedAD)
+    images = ClassifiedImageSerializer(many=True)
+    class Meta:
+        model = ClassifiedAD
+        fields = '__all__'
+class CreateClassifiedADSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=ClassifiedAD, required=False)
+    class Meta:
+        model = ClassifiedAD
+        fields = ('id', 'creator', 'title', 'content', 'price', 'price_currency',)
+class CreateclassifiedImageSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=ClassifiedImage, required=False)
+    class Meta:
+        model = ClassifiedImage
+        fields = ('id', 'ad', 'image', 'primary',)

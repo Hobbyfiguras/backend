@@ -31,7 +31,9 @@ INSTALLED_APPS = [
     'dry_rest_permissions',
     'channels',
     'haystack',
-    'guardian'
+    'guardian',
+    'djmoney',
+    'django_cleanup'
 ]
 
 ACCOUNT_ADAPTER ='FigureSite.adapters.FigureSiteAccountAdapter'
