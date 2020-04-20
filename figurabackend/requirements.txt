@@ -49,3 +49,4 @@ pysolr==3.8.1
 django-cleanup==2.1.0
 django-guardian==1.4.9
 django-money==1.0
+django-computedfields==0.0.14

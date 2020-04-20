@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage, ClassifiedReview
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -75,6 +75,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
     post_count = serializers.SerializerMethodField()
     thread_count = serializers.SerializerMethodField()
     bans = serializers.SerializerMethodField() 
+    classified_count = serializers.SerializerMethodField()
 
     def get_bans(self, obj):
         bans = obj.bans.all().order_by('-created')
@@ -84,6 +85,8 @@ class PublicUserSerializer(serializers.ModelSerializer):
         return obj.posts.count()
     def get_thread_count(self, obj):
         return obj.threads.count()
+    def get_classified_count(self, obj):
+        return obj.published_ads.count()
     class Meta:
         model = User
         exclude = ('password', 'email', 'nsfw_enabled',)
@@ -100,6 +103,7 @@ class CreatePostSerializer(serializers.ModelSerializer, EagerLoadingMixin):
 
 
 class CreateThreadSerializer(serializers.ModelSerializer, EagerLoadingMixin):
+
     class Meta:
         model = Thread
         fields = ('creator', 'title', 'forum', 'nsfw',)
@@ -217,23 +221,7 @@ class FullCreateThreadSerializer(ThreadSerializer):
         model = Thread
         exclude = ('subscribers',)
 
-class PrivateMessageSerializer(serializers.ModelSerializer):
-    id = HashIdField(model=PrivateMessage)
-    creator = PublicUserSerializer()
-    receiver = PublicUserSerializer()
 
-    class Meta:
-        model = PrivateMessage
-        fields = '__all__'
-
-class CreatePrivateMessageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PrivateMessage
-        fields = ('subject', 'content', 'creator', 'receiver',)
-class UpdatePrivateMessageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PrivateMessage
-        fields = ('read',)
 class ForumCategorySerializer(serializers.ModelSerializer):
     forums = BasicForumSerializer(many=True, read_only=True)
     
@@ -306,16 +294,47 @@ class ClassifiedImageSerializer(SerializerExtensionsMixin, serializers.ModelSeri
 class ClassifiedADSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=ClassifiedAD)
     images = ClassifiedImageSerializer(many=True)
+    creator = PublicUserSerializer()
+    sold_to = PublicUserSerializer()
     class Meta:
         model = ClassifiedAD
+        lookup_field = 'slug'
+        fields = '__all__'
+class ClassifiedReviewSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
+    id = HashIdField(model=ClassifiedReview)
+    creator = PublicUserSerializer()
+    class Meta:
+        model = ClassifiedReview
         fields = '__all__'
 class CreateClassifiedADSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=ClassifiedAD, required=False)
+    def get_validation_exclusions(self):
+        exclusions = super(CreateClassifiedADSerializer, self).get_validation_exclusions()
+        return exclusions + ['slug']
     class Meta:
         model = ClassifiedAD
-        fields = ('id', 'creator', 'title', 'content', 'price', 'price_currency',)
+        fields = ('id', 'creator', 'title', 'content', 'price', 'price_currency', 'slug',)
 class CreateclassifiedImageSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=ClassifiedImage, required=False)
     class Meta:
         model = ClassifiedImage
         fields = ('id', 'ad', 'image', 'primary',)
+
+class PrivateMessageSerializer(serializers.ModelSerializer):
+    id = HashIdField(model=PrivateMessage)
+    creator = PublicUserSerializer()
+    receiver = PublicUserSerializer()
+    related_ad = ClassifiedADSerializer()
+
+    class Meta:
+        model = PrivateMessage
+        fields = '__all__'
+
+class CreatePrivateMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PrivateMessage
+        fields = ('subject', 'content', 'creator', 'receiver', 'related_ad',)
+class UpdatePrivateMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PrivateMessage
+        fields = ('read',)

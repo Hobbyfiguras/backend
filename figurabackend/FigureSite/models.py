@@ -19,6 +19,7 @@ from django.http import Http404
 from guardian.mixins import GuardianUserMixin
 from djmoney.models.fields import MoneyField
 from uuid import uuid4
+from computedfields.models import ComputedFieldsModel, computed
 class MyUserManager(UserManager):
     def get_by_natural_key(self, username):
         return self.get(username__iexact=username)
@@ -71,7 +72,7 @@ avatar_rename = AvatarRename()
 forum_icon_rename = ForumIconRename()
 vote_type_rename = VoteTypeRename()
 classified_image_rename = ClassifiedImageRename()
-class User(AbstractUser, GuardianUserMixin):
+class User(AbstractUser, GuardianUserMixin, ComputedFieldsModel):
     objects = MyUserManager()
     avatar = ResizedImageField(size=[256, 256], crop=['middle', 'center'], force_format='JPEG', upload_to=avatar_rename, null=True, blank=True)
     mal_username = models.CharField(max_length=80, null=True, blank=True)
@@ -81,7 +82,13 @@ class User(AbstractUser, GuardianUserMixin):
     nsfw_enabled = models.BooleanField(default=False)
     location = models.TextField(max_length=100, default='')
     bio = models.TextField(max_length=10000, default='', null=True, blank=True)
-
+    
+    @computed(models.PositiveIntegerField(default=0))
+    def classifieds_positive_review_count(self):
+        return self.received_reviews.filter(recommended=True).count()
+    @computed(models.PositiveIntegerField(default=0))
+    def classifieds_negative_review_count(self):
+        return self.received_reviews.filter(recommended=False).count()
     def get_by_natural_key(self, username):
         return self.get(**{self.model.USERNAME_FIELD + '__iexact': username})
 
@@ -235,6 +242,7 @@ class PrivateMessage(models.Model):
     content = models.TextField(max_length=20000)
     created = models.DateTimeField(editable=False)
     read = models.BooleanField(default=False)
+    related_ad = models.ForeignKey("ClassifiedAD", related_name="+", null=True, blank=True, on_delete=models.CASCADE)
 
     @staticmethod
     @authenticated_users
@@ -589,14 +597,22 @@ class ClassifiedAD(models.Model):
     creator = models.ForeignKey(User, related_name="published_ads", on_delete=models.CASCADE)
     content = models.TextField(max_length=40000)
     title = models.CharField(max_length=300)
+    sold = models.BooleanField(default=False)
+    sold_to = models.ForeignKey(User, related_name="articles_bought", on_delete=models.SET_NULL, null=True, blank=True)
     price = MoneyField(max_digits=14, decimal_places=2, default_currency='EUR')
+    slug = models.SlugField(max_length=100, blank=True, unique=True)
+    reviewed = models.BooleanField(default=False)
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
             self.created = timezone.now()
+            unique_slugify(self, self.title)
         return super(ClassifiedAD, self).save(*args, **kwargs)
     @staticmethod
     def has_read_permission(request):
+        return True
+    
+    def has_object_read_permission(self, request):
         return True
     @staticmethod
     @authenticated_users
@@ -611,7 +627,23 @@ class ClassifiedAD(models.Model):
             return True
         else:
             return False
+    def __str__(self):
+        return self.title
+
+class ClassifiedReview(models.Model):
+    created = models.DateTimeField(editable=False)
+    content = models.TextField(max_length=40000)
+    recommended = models.BooleanField(default=False)
+    related_ad = models.ForeignKey(ClassifiedAD, related_name="+", null=True, blank=True, on_delete=models.SET_NULL)
+    creator = models.ForeignKey(User, related_name="reivews_made", on_delete=models.CASCADE)
+    for_user = models.ForeignKey(User, related_name="received_reviews", on_delete=models.SET_NULL, null=True, blank=True)
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created = timezone.now()
+        return super(ClassifiedReview, self).save(*args, **kwargs)
 class ClassifiedImage(models.Model):
-    image = ResizedImageField(force_format='JPEG', upload_to=classified_image_rename, null=True, blank=True)
+    image = ResizedImageField(upload_to=classified_image_rename, null=True, blank=True)
     ad = models.ForeignKey(ClassifiedAD, related_name="images", on_delete=models.CASCADE)
     primary = models.BooleanField(default=False)
+    nsfw = models.BooleanField(default=False)

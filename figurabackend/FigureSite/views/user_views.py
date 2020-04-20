@@ -12,7 +12,7 @@ from dry_rest_permissions.generics import DRYPermissions
 from django.http import Http404
 
 from FigureSite.search_indexes import UserIndex
-from FigureSite.models import User, Post
+from FigureSite.models import User, Post, ClassifiedAD
 from FigureSite import serializers
 
 # Paginations
@@ -50,7 +50,6 @@ class UserSearchView(HaystackViewSet):
 
     def finalize_response(self, request, response, *args, **kwargs):
       response = super(UserSearchView, self).finalize_response(request, response, *args, **kwargs)
-      print(response.data)
       for i, user in enumerate(response.data['results']):
         response.data['results'][i]['avatar'] = request.build_absolute_uri(response.data['results'][i]['avatar'])
       return response
@@ -87,6 +86,8 @@ class UserViewSet(viewsets.ModelViewSet):
     user = self.get_object()
     request.data['creator'] = request.user.id
     request.data['receiver'] = user.id
+    if 'related_ad' in request.data:
+      request.data['related_ad'] = internal_id_from_model_and_external_id(ClassifiedAD, request.data['related_ad'])
     serializer = serializers.CreatePrivateMessageSerializer(data=request.data)
     if serializer.is_valid():
       message = serializer.save()

@@ -16,6 +16,7 @@ router.register(r'notifications', notification_views.NotificationsViewSet, base_
 #router.register(r'search/posts', views.PostSearchView, base_name="post-search")
 router.register(r'search/threads', thread_views.ThreadSearchView, base_name="thread-search")
 router.register(r'search/users', user_views.UserSearchView, base_name="user-search")
+router.register(r'search/classifieds', classified_views.ClassifiedADSearchView, base_name="ad-search")
 router.register(r'classifieds', classified_views.ClassifiedADViewSet, base_name="classified-ads")
 urlpatterns = [
     path('', include(router.urls)),

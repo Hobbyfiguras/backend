@@ -1,10 +1,10 @@
 from django.utils import timezone
 from haystack import indexes
-from .models import Post, Thread, User
+from .models import Post, Thread, User, ClassifiedAD
 from haystack import signals
 from haystack.exceptions import NotHandled
 
-from .search_fields import AvatarField, UserAvatarField
+from .search_fields import AvatarField, UserAvatarField, ClassifiedImageField, MoneyField
 
 # HACK: Default boolean field is broken
 
@@ -40,6 +40,24 @@ class ThreadIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.filter(
             created__lte=timezone.now()
         )
+
+class ClassifiedIndex(indexes.SearchIndex, indexes.Indexable):
+
+    text = indexes.CharField(document=True, model_attr='title')
+    username = indexes.CharField(model_attr='creator__username')
+    slug = indexes.CharField(model_attr='slug')
+    created = indexes.DateTimeField(model_attr='created')
+    price = MoneyField(model_attr='price')
+    price_currency = indexes.CharField(model_attr='price_currency')
+    image = ClassifiedImageField(model_attr='title')
+    sold = BooleanField(model_attr='sold')
+    def get_model(self):
+        return ClassifiedAD
+
+    def index_queryset(self, using=None):
+        return self.get_model().objects.filter(
+            created__lte=timezone.now()
+        ).order_by('created', '_created')
 
 class UserIndex(indexes.SearchIndex, indexes.Indexable):
 

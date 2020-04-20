@@ -33,7 +33,8 @@ INSTALLED_APPS = [
     'haystack',
     'guardian',
     'djmoney',
-    'django_cleanup'
+    'django_cleanup',
+    'computedfields'
 ]
 
 ACCOUNT_ADAPTER ='FigureSite.adapters.FigureSiteAccountAdapter'
@@ -145,7 +146,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-DJANGORESIZED_DEFAULT_FORCE_FORMAT = 'JPEG'
 DJANGORESIZED_DEFAULT_FORMAT_EXTENSIONS = {'JPEG': ".jpg"}
 GUARDIAN_MONKEY_PATCH = False
 # Static files (CSS, JavaScript, Images)
