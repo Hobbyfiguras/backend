@@ -44,6 +44,9 @@ class ThreadSearchView(HaystackViewSet):
     pagination_class = ThreadPagination
     serializer_class = ThreadSearchSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    def filter_queryset(self, queryset):
+      queryset = super(ThreadSearchView, self).filter_queryset(queryset)
+      return queryset.order_by('-created')
 
 class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = Thread.objects.all()
