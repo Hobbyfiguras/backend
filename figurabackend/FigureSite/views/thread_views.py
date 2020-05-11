@@ -91,7 +91,18 @@ class ThreadViewSet(ExternalIdViewMixin, mixins.UpdateModelMixin, mixins.ListMod
     @action(detail=False, methods=['get'])
     def front_page(self, request, pk=None):
         page = self.paginate_queryset(
-            Thread.objects.filter(Q(forum__slug='noticias-y-novedades') | Q(highlighted=True)).order_by('-created'))
+            Thread.objects.filter(Q(forum__slug='noticias-y-novedades')).order_by('-created'))
+        print(page)
+        if page is not None:
+            serializer = serializers.ThreadSerializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
+    def highlighted(self, request, pk=None):
+        page = self.paginate_queryset(
+            Thread.objects.filter(Q(highlighted=True)).order_by('-created'))
         print(page)
         if page is not None:
             serializer = serializers.ThreadSerializer(
