@@ -1,5 +1,5 @@
 import random
-from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage, ClassifiedReview
+from .models import User, ForumCategory, Forum, Post, Thread, Report, VoteType, UserVote, Notification, BanReason, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage, ClassifiedReview, ClassifiedCategory
 from rest_framework import serializers
 from django.templatetags.static import static
 from django.core.paginator import Paginator
@@ -291,11 +291,17 @@ class ClassifiedImageSerializer(SerializerExtensionsMixin, serializers.ModelSeri
     class Meta:
         model = ClassifiedImage
         fields = '__all__'
+class ClassifiedCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassifiedCategory
+        lookup_field = 'slug'
+        fields = '__all__'
 class ClassifiedADSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=ClassifiedAD)
     images = ClassifiedImageSerializer(many=True)
     creator = PublicUserSerializer()
     sold_to = PublicUserSerializer()
+
     class Meta:
         model = ClassifiedAD
         lookup_field = 'slug'
@@ -306,14 +312,22 @@ class ClassifiedReviewSerializer(SerializerExtensionsMixin, serializers.ModelSer
     class Meta:
         model = ClassifiedReview
         fields = '__all__'
+class CustomSlugRelatedField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        obj = ClassifiedCategory.objects.get(slug="test")
+        print(obj.id)
+        return obj
+    def get_queryset(self):
+        return ClassifiedCategory.objects
 class CreateClassifiedADSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=ClassifiedAD, required=False)
+    category = CustomSlugRelatedField(slug_field="slug")
     def get_validation_exclusions(self):
         exclusions = super(CreateClassifiedADSerializer, self).get_validation_exclusions()
         return exclusions + ['slug']
     class Meta:
         model = ClassifiedAD
-        fields = ('id', 'creator', 'title', 'content', 'price', 'price_currency', 'slug',)
+        fields = ('id', 'creator', 'title', 'content', 'price', 'price_currency', 'slug', 'category',)
 class CreateclassifiedImageSerializer(SerializerExtensionsMixin, serializers.ModelSerializer):
     id = HashIdField(model=ClassifiedImage, required=False)
     class Meta:

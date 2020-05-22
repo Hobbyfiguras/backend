@@ -602,6 +602,7 @@ class ClassifiedAD(models.Model):
     price = MoneyField(max_digits=14, decimal_places=2, default_currency='EUR')
     slug = models.SlugField(max_length=100, blank=True, unique=True)
     reviewed = models.BooleanField(default=False)
+    category = models.ForeignKey("ClassifiedCategory", related_name="+", on_delete=models.CASCADE)
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
@@ -629,6 +630,37 @@ class ClassifiedAD(models.Model):
             return False
     def __str__(self):
         return self.title
+
+class ClassifiedCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    slug = models.SlugField(max_length=100, blank=True, unique=True)
+
+    @staticmethod
+    def has_read_permission(request):
+        return True
+
+    def has_object_read_permission(self, request):
+        return True
+
+    @staticmethod
+    @allow_staff_or_superuser
+    def has_write_permission(request):
+        return False
+
+    @allow_staff_or_superuser
+    def has_object_write_permission(self, request):
+        return False
+
+    def __str__(self):
+        return self.name
+    class Meta:
+        verbose_name_plural = "classified categories"
+    def save(self, *args, **kwargs):
+        # Only save slugs on first save
+        if not self.id:
+            unique_slugify(self, self.name)
+        super(ClassifiedCategory, self).save(*args,**kwargs)
 
 class ClassifiedReview(models.Model):
     created = models.DateTimeField(editable=False)

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Forum, ForumCategory, Thread, Post, VoteType, UserVote, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage
+from .models import User, Forum, ForumCategory, Thread, Post, VoteType, UserVote, PrivateMessage, MFCItem, ClassifiedAD, ClassifiedImage, ClassifiedCategory
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from ordered_model.admin import OrderedModelAdmin
 from guardian.admin import GuardedModelAdmin
@@ -34,3 +34,4 @@ admin.site.register(PrivateMessage, admin.ModelAdmin)
 admin.site.register(MFCItem, admin.ModelAdmin)
 admin.site.register(ClassifiedAD, admin.ModelAdmin)
 admin.site.register(ClassifiedImage, admin.ModelAdmin)
+admin.site.register(ClassifiedCategory, admin.ModelAdmin)

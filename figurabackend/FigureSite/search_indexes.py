@@ -51,6 +51,7 @@ class ClassifiedIndex(indexes.SearchIndex, indexes.Indexable):
     price_currency = indexes.CharField(model_attr='price_currency')
     image = ClassifiedImageField(model_attr='title')
     sold = BooleanField(model_attr='sold')
+    category = indexes.CharField(model_attr="category__slug")
     def get_model(self):
         return ClassifiedAD
 

@@ -5,7 +5,7 @@ from rest_framework_serializer_extensions.views import ExternalIdViewMixin
 from rest_framework import mixins
 from FigureSite import serializers
 from rest_framework import viewsets
-from FigureSite.models import ClassifiedAD, PrivateMessage, User, ClassifiedReview
+from FigureSite.models import ClassifiedAD, PrivateMessage, User, ClassifiedReview, ClassifiedCategory
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
@@ -18,6 +18,11 @@ class ClassifiedADPagination(PageNumberPagination):
     page_size = 4
     max_page_size = 20
     page_size_query_param = 'page_size'
+
+class ClassifiedCategoryViewSet(mixins.UpdateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+  queryset = ClassifiedCategory.objects.all()
+  permission_classes = (DRYPermissions,)
+  serializer_class = serializers.ClassifiedCategorySerializer
 class ClassifiedADViewSet(mixins.UpdateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
   queryset = ClassifiedAD.objects.all()
   permission_classes = (DRYPermissions,)
@@ -44,6 +49,7 @@ class ClassifiedADViewSet(mixins.UpdateModelMixin, mixins.ListModelMixin, mixins
           return Response(image_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
           image_serializer.save()
+        ad.save()
       return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -87,7 +93,7 @@ class ClassifiedsSearchSerializer(HaystackSerializer):
     # The `fields` contains all the fields we want to include.
     # NOTE: Make sure you don't confuse these with model attributes. These
     # fields belong to the search index!
-    fields = [ "text", "username", "image", "created", "slug", "price", "price_currency", "sold" ]
+    fields = [ "text", "username", "image", "created", "slug", "price", "price_currency", "sold", "category" ]
 class ClassifiedADSearchView(HaystackViewSet):
   index_models = [ClassifiedAD]
   # `index_models` is an optional list of which models you would like to include

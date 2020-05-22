@@ -18,6 +18,7 @@ router.register(r'search/threads', thread_views.ThreadSearchView, base_name="thr
 router.register(r'search/users', user_views.UserSearchView, base_name="user-search")
 router.register(r'search/classifieds', classified_views.ClassifiedADSearchView, base_name="ad-search")
 router.register(r'classifieds', classified_views.ClassifiedADViewSet, base_name="classified-ads")
+router.register(r'classified_categories', classified_views.ClassifiedCategoryViewSet, base_name="classified-categories")
 urlpatterns = [
     path('', include(router.urls)),
     path('settings/', forum_settings_views.ForumSettings.as_view())

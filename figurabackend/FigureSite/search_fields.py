@@ -20,12 +20,15 @@ class UserAvatarField(CharField):
 class ClassifiedImageField(CharField):
     field_type = "string"
     def prepare(self, obj):
-        images = obj.images.all()
-        image = images[0]
-        for img in images:
-            if img.primary:
-                image = img
-        return image.image.url
+        if len(obj.images.all()) > 0:
+            images = obj.images.all()
+            image = images[0]
+            for img in images:
+                if img.primary:
+                    image = img
+            return image.image.url
+        else:
+            return None
 class MoneyField(DecimalField):
     field_type = "float"
     def prepare(self, obj):
